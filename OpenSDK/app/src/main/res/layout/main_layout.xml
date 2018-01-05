@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="@string/appid" />
+
+    <EditText
+        android:id="@+id/et_channelid"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="@string/hint"
+        android:text="9cd55f06" />
+
+    <EditText
+        android:id="@+id/et_token"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="token"
+        android:text="vhall" />
+
+    <Button
+        android:id="@+id/btn_push"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="push"
+        android:text="发直播" />
+
+    <Button
+        android:id="@+id/btn_play_live"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="playlive"
+        android:text="看直播" />
+
+    <Button
+        android:id="@+id/btn_play_vod"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="playvod"
+        android:text="看录播" />
+
+    <Button
+        android:id="@+id/btn_doc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showDoc"
+        android:text="看文档" />
+
+    <Button
+        android:id="@+id/btn_im"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showIM"
+        android:text="聊天" />
+
+
+</LinearLayout>
