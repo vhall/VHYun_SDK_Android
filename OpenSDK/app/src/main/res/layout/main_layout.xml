@@ -16,7 +16,6 @@
         android:id="@+id/et_channelid"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:hint="@string/hint"
         android:text="9cd55f06" />
 
     <EditText
