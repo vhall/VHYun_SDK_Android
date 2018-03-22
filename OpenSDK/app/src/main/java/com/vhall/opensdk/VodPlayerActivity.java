@@ -5,7 +5,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -21,7 +20,7 @@ import android.widget.Toast;
 import com.vhall.framework.logger.L;
 import com.vhall.lss.play.IVHLivePlayer;
 import com.vhall.ops.VHDocument;
-import com.vhall.ops.VHDocumentView;
+import com.vhall.ops.VHDocumentContainer;
 import com.vhall.vod.VHPlayerListener;
 import com.vhall.vod.VHVodPlayer;
 import com.vhall.vod.player.VHExoPlayer;
@@ -46,7 +45,7 @@ public class VodPlayerActivity extends Activity {
     ProgressBar mLoadingPB;
     SeekBar mSeekbar;
     TextView mPosView, mMaxView;
-    VHDocumentView mDocView;
+    VHDocumentContainer mDocView;
     VHDocument mDoc;
     RadioGroup mDPIGroup;
     //data
@@ -72,7 +71,7 @@ public class VodPlayerActivity extends Activity {
         accessToken = getIntent().getStringExtra("token");
         setContentView(R.layout.vod_layout);
         mDPIGroup = (RadioGroup) this.findViewById(R.id.rg_dpi);
-        mDocView = (VHDocumentView) this.findViewById(R.id.doc);
+        mDocView = (VHDocumentContainer) this.findViewById(R.id.doc);
         mPlayBtn = (ImageView) this.findViewById(R.id.btn_play);
         mLoadingPB = (ProgressBar) this.findViewById(R.id.pb_loading);
         mSeekbar = (SeekBar) this.findViewById(R.id.seekbar);
@@ -101,7 +100,7 @@ public class VodPlayerActivity extends Activity {
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 
-            }
+             }
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
@@ -174,7 +173,6 @@ public class VodPlayerActivity extends Activity {
 
                     break;
                 case IVHLivePlayer.EVENT_DPI_LIST:
-                    Log.i(TAG, "DPILIST:" + msg);
                     try {
                         JSONArray array = new JSONArray(msg);
                         if (array != null && array.length() > 0) {
@@ -195,7 +193,6 @@ public class VodPlayerActivity extends Activity {
 //                    popu.notifyDataSetChanged(currentDPI, dipList);
                     break;
                 case IVHLivePlayer.EVENT_DPI_CHANGED:
-                    Log.i(TAG, "DPI:" + msg);
                     for (int i = 0; i < mDPIGroup.getChildCount(); i++) {
                         RadioButton button = (RadioButton) mDPIGroup.getChildAt(i);
                         if (button.getText().equals(msg)) {

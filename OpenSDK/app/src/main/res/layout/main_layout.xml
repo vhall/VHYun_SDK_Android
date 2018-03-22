@@ -6,17 +6,18 @@
     android:padding="10dp">
 
     <TextView
+        android:id="@+id/tv_appid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:padding="10dp"
-        android:text="@string/appid" />
+        android:padding="10dp" />
 
     <EditText
         android:id="@+id/et_channelid"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:text="9cd55f06" />
+        android:hint="@string/hint"
+        android:text="ch_4e9af4e2" />
 
     <EditText
         android:id="@+id/et_token"

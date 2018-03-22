@@ -4,9 +4,9 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.vhall.ops.VHDocumentView
+    <com.vhall.ops.VHDocumentContainer
         android:id="@+id/doc"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></com.vhall.ops.VHDocumentView>
+        android:layout_height="match_parent"></com.vhall.ops.VHDocumentContainer>
 
 </LinearLayout>

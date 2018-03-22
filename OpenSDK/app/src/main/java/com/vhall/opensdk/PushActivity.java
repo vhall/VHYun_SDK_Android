@@ -33,7 +33,6 @@ public class PushActivity extends Activity {
     int mCameraId = 0;
     int mBeautyLevel = 0;
     boolean isAudioEnable = true;
-    boolean isPushing = false;
     int mDrawMode = VHLivePushFormat.DRAW_MODE_NONE;
     //view
     TextView mSpeedView;

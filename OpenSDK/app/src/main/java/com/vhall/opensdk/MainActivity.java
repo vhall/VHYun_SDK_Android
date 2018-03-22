@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
+
+import com.vhall.framework.VhallSDK;
 
 /**
  * Created by Hank on 2017/12/8.
@@ -13,6 +16,7 @@ import android.widget.EditText;
 public class MainActivity extends Activity {
 
     EditText et_channelid, et_token;
+    TextView tv_appid;
 
 
     @Override
@@ -21,6 +25,8 @@ public class MainActivity extends Activity {
         setContentView(R.layout.main_layout);
         et_channelid = (EditText) this.findViewById(R.id.et_channelid);
         et_token = (EditText) this.findViewById(R.id.et_token);
+        tv_appid = (TextView) this.findViewById(R.id.tv_appid);
+        tv_appid.setText(VhallSDK.getInstance().getAPP_ID());
     }
 
     public void push(View view) {

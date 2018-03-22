@@ -17,6 +17,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    signingConfigs {
+        debug {
+            storeFile file("vhall_android_app.keystore")
+            storePassword '123456'
+            keyAlias 'yanting lin'
+            keyPassword '123456'
+        }
+    }
 }
 
 dependencies {
