@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/darker_gray"
+        android:text="互动直播配置:"
+        android:textColor="@android:color/white" />
+
+    <EditText
+        android:id="@+id/et_broid"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="旁路ID（互动直播推旁路配置项）" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:padding="30dp">
+
+        <RadioGroup
+            android:id="@+id/rg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/rb_sd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SD" />
+
+            <RadioButton
+                android:id="@+id/rb_hd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="HD" />
+
+            <RadioButton
+                android:id="@+id/rb_uhd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="UHD" />
+        </RadioGroup>
+
+        <TextView
+            android:id="@+id/et_pix"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="分辨率" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="保存" />
+
+    <LinearLayout
+        android:id="@+id/ll_camera"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"></LinearLayout>
+
+
+</LinearLayout>

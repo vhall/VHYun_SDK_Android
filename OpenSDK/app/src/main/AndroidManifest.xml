@@ -3,19 +3,16 @@
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.RECORD_VIDEO" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
+
     <uses-feature android:name="android.hardware.camera" />
-    <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
         android:allowBackup="true"
@@ -33,30 +30,33 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-
-
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait"></activity>
         <activity
-            android:name=".LivePlayerActivity"
+            android:name=".watchlive.LivePlayerActivity"
             android:screenOrientation="portrait"></activity>
         <activity
-            android:name=".PushActivity"
+            android:name=".push.PushActivity"
             android:screenOrientation="portrait"></activity>
         <activity
-            android:name=".VodPlayerActivity"
+            android:name=".watchplayback.VodPlayerActivity"
             android:screenOrientation="portrait"></activity>
         <activity
-            android:name=".DocActivity"
+            android:name=".document.DocActivity"
             android:screenOrientation="portrait"></activity>
         <activity
-            android:name=".IMActivity"
+            android:name=".im.IMActivity"
+            android:screenOrientation="portrait"></activity>
+        <activity
+            android:name=".interactive.InteractiveActivity"
+            android:configChanges="keyboardHidden|screenSize|orientation"></activity>
+
+        <activity
+            android:name=".ConfigActivity"
             android:screenOrientation="portrait"></activity>
 
         <service android:name="com.vhall.framework.VhallConnectService"></service>
-
     </application>
 
 </manifest>

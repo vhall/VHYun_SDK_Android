@@ -5,26 +5,37 @@
     android:orientation="vertical"
     android:padding="10dp">
 
-    <TextView
-        android:id="@+id/tv_appid"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="10dp" />
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_appid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:padding="10dp" />
+
+        <Button
+            android:id="@+id/btn_config"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="设置" />
+    </RelativeLayout>
+
 
     <EditText
         android:id="@+id/et_channelid"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:hint="@string/hint"
-        android:text="" />
+        android:hint="@string/hint"/>
 
     <EditText
         android:id="@+id/et_token"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:hint="token"
-        android:text="vhall" />
+        android:hint="token"/>
 
     <Button
         android:id="@+id/btn_push"
@@ -60,6 +71,13 @@
         android:layout_height="wrap_content"
         android:onClick="showIM"
         android:text="聊天" />
+
+    <Button
+        android:id="@+id/btn_interactive"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showInteractive"
+        android:text="互动直播" />
 
 
 </LinearLayout>

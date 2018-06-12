@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="操作："
+        android:textColor="@android:color/black"
+        android:textSize="15dp" />
+
+    <LinearLayout
+        android:id="@+id/ll_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_invite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="邀请上麦"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btn_quit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="强制下麦"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/btn_kick"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="踢出房间"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</LinearLayout>

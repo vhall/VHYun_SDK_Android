@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion "22.0.1"
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         applicationId "com.vhall.opensdk"
         minSdkVersion 16
-        targetSdkVersion 22
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
     }
@@ -26,12 +26,17 @@ android {
             keyPassword '123456'
         }
     }
+    repositories{
+        flatDir{
+            dirs 'libs'
+        }
+    }
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:22.0.+'
-    compile("io.socket:socket.io-client:0.9.0") {
+    implementation fileTree(include: ['*.jar','*.aar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:27.0.+'
+    implementation("io.socket:socket.io-client:0.9.0") {
         exclude group: 'org.json', module: 'json'
     }
 

@@ -2,13 +2,29 @@ package com.vhall.opensdk;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import com.vhall.framework.VhallSDK;
+import com.vhall.opensdk.document.DocActivity;
+import com.vhall.opensdk.im.IMActivity;
+import com.vhall.opensdk.interactive.InteractiveActivity;
+import com.vhall.opensdk.push.PushActivity;
+import com.vhall.opensdk.watchlive.LivePlayerActivity;
+import com.vhall.opensdk.watchplayback.VodPlayerActivity;
+
+import static android.Manifest.permission.CAMERA;
+import static android.Manifest.permission.RECORD_AUDIO;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 /**
  * Created by Hank on 2017/12/8.
@@ -17,21 +33,43 @@ public class MainActivity extends Activity {
 
     EditText et_channelid, et_token;
     TextView tv_appid;
+    Button mBtnConfig;
+    private static final String TAG = "VHLivePusher";
+    private static final int REQUEST_PUSH = 0;
+    private static final int REQUEST_STORAGE = 1;
+    private static final int REQUEST_INTERACTIVE = 2;
+
+    SharedPreferences sp;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_layout);
-        et_channelid = (EditText) this.findViewById(R.id.et_channelid);
-        et_token = (EditText) this.findViewById(R.id.et_token);
-        tv_appid = (TextView) this.findViewById(R.id.tv_appid);
+        sp = getSharedPreferences("config", MODE_PRIVATE);
+        String roomid = sp.getString("key_roomid", "");
+        String token = sp.getString("key_token", "");
+        et_channelid = this.findViewById(R.id.et_channelid);
+        et_token = this.findViewById(R.id.et_token);
+        et_channelid.setText(roomid);
+        et_token.setText(token);
+        tv_appid = this.findViewById(R.id.tv_appid);
+        mBtnConfig = this.findViewById(R.id.btn_config);
         tv_appid.setText(VhallSDK.getInstance().getAPP_ID());
+        mBtnConfig.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, ConfigActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     public void push(View view) {
-        Intent intent = new Intent(this, PushActivity.class);
-        startAct(intent);
+        if (getPushPermission(REQUEST_PUSH)) {
+            Intent intent = new Intent(this, PushActivity.class);
+            startAct(intent);
+        }
     }
 
     public void playlive(View view) {
@@ -39,9 +77,13 @@ public class MainActivity extends Activity {
         startAct(intent);
     }
 
+    //观看回放需要下载、保存和读取文档信息
     public void playvod(View view) {
-        Intent intent = new Intent(this, VodPlayerActivity.class);
-        startAct(intent);
+        if (getStoragePermission()) {
+            Intent intent = new Intent(this, VodPlayerActivity.class);
+            startAct(intent);
+        }
+
     }
 
     public void showDoc(View view) {
@@ -54,6 +96,60 @@ public class MainActivity extends Activity {
         startAct(intent);
     }
 
+    public void showInteractive(View view) {
+        if (getPushPermission(REQUEST_INTERACTIVE)) {
+            Intent intent = new Intent(this, InteractiveActivity.class);
+            startAct(intent);
+        }
+    }
+
+    private boolean getPushPermission(int requestCode) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+        Log.e(TAG, "CAMERA:" + checkSelfPermission(CAMERA) + " MIC:" + checkSelfPermission(RECORD_AUDIO));
+        if (checkSelfPermission(CAMERA) == PackageManager.PERMISSION_GRANTED && checkSelfPermission(RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        requestPermissions(new String[]{CAMERA, RECORD_AUDIO}, requestCode);
+        return false;
+    }
+
+    private boolean getStoragePermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+        if (checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        requestPermissions(new String[]{WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE);
+        return false;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_PUSH) {
+            if (grantResults.length == 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                Log.i(TAG, "get REQUEST_PUSH permission success");
+                Intent intent = new Intent(this, PushActivity.class);
+                startAct(intent);
+            }
+        } else if (requestCode == REQUEST_INTERACTIVE) {
+            if (grantResults.length == 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                Log.i(TAG, "get REQUEST_PUSH permission success");
+                Intent intent = new Intent(this, InteractiveActivity.class);
+                startAct(intent);
+            }
+        } else if (requestCode == REQUEST_STORAGE) {
+            Log.i(TAG, grantResults.length + ":" + grantResults[0]);
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Intent intent = new Intent(this, VodPlayerActivity.class);
+                startAct(intent);
+            }
+        }
+    }
+
     private void startAct(Intent intent) {
         String roomid = et_channelid.getText().toString();
         String token = et_token.getText().toString();
@@ -62,5 +158,9 @@ public class MainActivity extends Activity {
         intent.putExtra("channelid", roomid);
         intent.putExtra("token", token);
         startActivity(intent);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString("key_roomid", roomid);
+        editor.putString("key_token", token);
+        editor.commit();
     }
 }
