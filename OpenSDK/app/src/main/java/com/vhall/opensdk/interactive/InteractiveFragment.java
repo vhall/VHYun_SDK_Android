@@ -115,6 +115,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             public void onSuccess() {
                 isEnable = true;
                 ClickEventEnter();
+                refreshMembers();
             }
 
             @Override
