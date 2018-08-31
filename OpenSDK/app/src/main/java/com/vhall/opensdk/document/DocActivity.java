@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.vhall.framework.connect.ConnectServer;
 import com.vhall.framework.VhallConnectService;
 import com.vhall.opensdk.R;
 import com.vhall.ops.VHDocument;
@@ -30,10 +31,18 @@ public class DocActivity extends Activity {
         view = this.findViewById(R.id.doc);
         document = new VHDocument(mChannelId, mAccessToken);
         document.setDocumentView(view);
-        document.setOnConnectChangedListener(new VhallConnectService.OnConnectChangedListener() {
+        document.setOnConnectChangedListener(new VhallConnectService.OnConnectStateChangedListener() {
             @Override
-            public void onConnectChanged(int code) {
-                String text = code == 1 ? "连接成功！" : "连接失败";
+            public void onStateChanged(ConnectServer.State state, int serverType) {
+                String text = "";
+                switch (state) {
+                    case STATE_DISCONNECT:
+                        text = "连接失败";
+                        break;
+                    case STATE_CONNECTED:
+                        text = "连接成功！";
+                        break;
+                }
                 Toast.makeText(DocActivity.this, "网络：" + text, Toast.LENGTH_SHORT).show();
             }
         });

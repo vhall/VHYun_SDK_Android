@@ -27,7 +27,6 @@ public class SplashActivity extends AppCompatActivity {
     EditText mEditUserid;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,20 +37,21 @@ public class SplashActivity extends AppCompatActivity {
         getPermission();
 
     }
+
     //初始化SDK需要读取手机信息做信息统计，如果取不到权限，信息为空，不影响SDK使用
-    private void getPermission(){
-        if(Build.VERSION.SDK_INT<Build.VERSION_CODES.M)
+    private void getPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M)
             return;
-        if(checkSelfPermission(READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED)
+        if (checkSelfPermission(READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED)
             return;
         requestPermissions(new String[]{READ_PHONE_STATE}, REQUEST_READ_PHONE_STATE);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode==REQUEST_READ_PHONE_STATE){
-            if(grantResults.length==1&&grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                Log.i(TAG,"get READ_PHONE_STATE permission success");
+        if (requestCode == REQUEST_READ_PHONE_STATE) {
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.i(TAG, "get READ_PHONE_STATE permission success");
             }
         }
     }
@@ -63,20 +63,10 @@ public class SplashActivity extends AppCompatActivity {
 
         if (!TextUtils.isEmpty(appid)) {
             VhallSDK.getInstance().setLogLevel(L.LogLevel.FULL);
-            VhallSDK.getInstance().nativeLog(true);
-            VhallSDK.getInstance().init(getApplicationContext(), appid, userid, new VhallSDK.InitCallback() {
-                @Override
-                public void onSuccess() {
-                    Intent intent = new Intent(SplashActivity.this, MainActivity.class);
-                    startActivity(intent);
-                }
-
-                @Override
-                public void onFailure(String msg) {
-
-                }
-            });
-
+//            VhallSDK.getInstance().nativeLog(true);
+            VhallSDK.getInstance().init(getApplicationContext(), appid, userid);//初始化成功会打印日志：初始化成功！，请确保注册的appid与当前应用包名签名一致
+            Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+            startActivity(intent);
         }
     }
 }

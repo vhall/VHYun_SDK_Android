@@ -61,7 +61,6 @@ public class LivePlayerActivity extends Activity {
         mPlayBtn = this.findViewById(R.id.btn_play);
         mLoadingPB = this.findViewById(R.id.pb_loading);
         mSpeedTV = this.findViewById(R.id.tv_speed);
-
         mDPIGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {

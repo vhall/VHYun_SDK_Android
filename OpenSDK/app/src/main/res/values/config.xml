@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="appid">342a10bb</string><!--ceefadb5-->
+    <string name="appid">d317f559</string><!--ceefadb5-->
     <string name="userid">test</string>
     <string name="hint">channelid或recordid或roomid</string>
 
