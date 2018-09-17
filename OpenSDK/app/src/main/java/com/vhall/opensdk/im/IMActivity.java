@@ -15,11 +15,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vhall.framework.connect.ConnectServer;
 import com.vhall.framework.VhallConnectService;
+import com.vhall.framework.connect.ConnectServer;
 import com.vhall.ims.VHIM;
 import com.vhall.opensdk.R;
-import com.vhall.opensdk.document.DocActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,8 +31,6 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import static com.vhall.framework.connect.ConnectServer.State.STATE_DISCONNECT;
 
 
 /**
@@ -63,16 +60,21 @@ public class IMActivity extends Activity {
         im.setOnConnectChangedListener(new VhallConnectService.OnConnectStateChangedListener() {
             @Override
             public void onStateChanged(ConnectServer.State state, int serverType) {
-                String text = "";
-                switch (state) {
-                    case STATE_DISCONNECT:
-                        text = "连接失败";
-                        break;
-                    case STATE_CONNECTED:
-                        text = "连接成功！";
-                        break;
+                if(serverType== VhallConnectService.SERVER_CHAT){
+                    String text = "";
+                    switch (state) {
+                        case STATE_CONNECTIONG:
+                            text = "连接中";
+                            break;
+                        case STATE_DISCONNECT:
+                            text = "连接失败";
+                            break;
+                        case STATE_CONNECTED:
+                            text = "连接成功！";
+                            break;
+                    }
+                    Toast.makeText(IMActivity.this, "网络：" + text, Toast.LENGTH_SHORT).show();
                 }
-                Toast.makeText(IMActivity.this, "网络：" + text, Toast.LENGTH_SHORT).show();
             }
         });
         im.join();

@@ -95,19 +95,22 @@ public class VodPlayerActivity extends Activity {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
                 if (mPlayer != null && mPlayer.resumeAble()) {
+                    mPlayer.setBackground(false);
                     mPlayer.resume();
                 }
             }
 
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-             }
+            }
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
-                if (mPlayer != null && mPlaying)
+                if (mPlayer != null) {
                     mPlayer.pause();
+                    mPlayer.setBackground(true);
+                }
+
             }
         });
 
@@ -128,10 +131,9 @@ public class VodPlayerActivity extends Activity {
 //        });
     }
 
-//    public void changeDPI(View view) {
+    //    public void changeDPI(View view) {
 //        popu.showAtLocation(getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
 //    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
