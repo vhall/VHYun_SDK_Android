@@ -441,6 +441,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                 view.setLayoutParams(params);
                 renderView.init(interactive.getEglBase().getEglBaseContext(), null);
                 renderView.setStream(stream);
+                view.setTag(stream);
                 videoBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
