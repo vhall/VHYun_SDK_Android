@@ -28,6 +28,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vhall.ilss.VHILSS;
 import com.vhall.ilss.VHInteractive;
 import com.vhall.opensdk.ConfigActivity;
 import com.vhall.opensdk.R;
@@ -38,6 +39,7 @@ import com.vhall.vhallrtc.client.VHRenderView;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.webrtc.RendererCommon;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -108,9 +110,10 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mDefinition = sp.getInt(ConfigActivity.KEY_PIX_TYPE, 0);
 
         interactive = new VHInteractive(mContext, new RoomListener());
-        interactive.setDefinition(mDefinition);
+        interactive.setDefinition(VHILSS.HD);
         interactive.setOnMessageListener(new MyMessageListener());
         localView.init(interactive.getEglBase().getEglBaseContext(), null);
+        localView.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
         interactive.setLocalView(localView, Stream.VhallStreamType.VhallStreamTypeAudioAndVideo);
         interactive.init(mRoomId, mAccessToken, new VHInteractive.InitCallback() {
             @Override
@@ -424,6 +427,8 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             @Override
             public void run() {
                 setSpeakerphoneOn(true);
+                if (changeSteam(stream))
+                    return;
                 int height = mLayoutGroup.getHeight();
                 int ori = getActivity().getRequestedOrientation();
                 Log.i(TAG, "ori:" + ori);
@@ -445,32 +450,41 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                 videoBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        try {
-                            if (isChecked)//关闭视频开
-                                stream.muteVideo();
-                            else//关闭视频关
-                                stream.unmuteVideo();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                        if (isChecked)//关闭视频开
+                            stream.muteVideo();
+                        else//关闭视频关
+                            stream.unmuteVideo();
                     }
                 });
                 audioBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        try {
-                            if (isChecked)
-                                stream.muteAudio();
-                            else//关闭视频关
-                                stream.unmuteAudio();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                        if (isChecked)
+                            stream.muteAudio();
+                        else//关闭视频关
+                            stream.unmuteAudio();
                     }
                 });
                 mLayoutGroup.addView(view);
             }
         });
+    }
+
+    public boolean changeSteam(Stream stream) {
+        if (stream == null)
+            return true;
+        boolean added = false;
+        for (int i = 0; i < mLayoutGroup.getChildCount(); i++) {
+            View v = mLayoutGroup.getChildAt(i);
+            Stream item = (Stream) v.getTag();
+            if (item != null && item.streamId == stream.streamId) {
+                VHRenderView renderView = v.findViewById(R.id.renderview);
+                renderView.setStream(stream);
+                added = true;
+                break;
+            }
+        }
+        return added;
     }
 
     private void removeStream(final Stream stream) {
@@ -551,29 +565,21 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mVideoTB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                try {
-                    if (isChecked)//关闭视频开
-                        interactive.getLocalStream().muteVideo();
-                    else//关闭视频关
-                        interactive.getLocalStream().unmuteVideo();
+                if (isChecked)//关闭视频开
+                    interactive.getLocalStream().muteVideo();
+                else//关闭视频关
+                    interactive.getLocalStream().unmuteVideo();
 
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
             }
         });
         mAudioTB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                try {
-                    if (isChecked)
-                        interactive.getLocalStream().muteAudio();
-                    else
-                        interactive.getLocalStream().unmuteAudio();
+                if (isChecked)
+                    interactive.getLocalStream().muteAudio();
+                else
+                    interactive.getLocalStream().unmuteAudio();
 
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
             }
         });
     }

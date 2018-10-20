@@ -15,11 +15,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vhall.framework.VhallConnectService;
 import com.vhall.framework.connect.ConnectServer;
+import com.vhall.framework.VhallConnectService;
 import com.vhall.ims.VHIM;
 import com.vhall.opensdk.R;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -31,7 +30,6 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
 
 /**
  * Created by Hank on 2017/12/20.
@@ -60,7 +58,7 @@ public class IMActivity extends Activity {
         im.setOnConnectChangedListener(new VhallConnectService.OnConnectStateChangedListener() {
             @Override
             public void onStateChanged(ConnectServer.State state, int serverType) {
-                if(serverType== VhallConnectService.SERVER_CHAT){
+                if(serverType==VhallConnectService.SERVER_CHAT){
                     String text = "";
                     switch (state) {
                         case STATE_CONNECTIONG:
