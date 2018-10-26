@@ -5,6 +5,8 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -13,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,12 +25,15 @@ import com.vhall.lss.play.IVHLivePlayer;
 import com.vhall.opensdk.R;
 import com.vhall.ops.VHDocument;
 import com.vhall.ops.VHDocumentContainer;
+import com.vhall.ops.VHOPS;
+import com.vhall.ops.VHOPSView;
 import com.vhall.vod.VHPlayerListener;
 import com.vhall.vod.VHVodPlayer;
 import com.vhall.vod.player.VHExoPlayer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -46,11 +52,11 @@ public class VodPlayerActivity extends Activity {
     ProgressBar mLoadingPB;
     SeekBar mSeekbar;
     TextView mPosView, mMaxView;
-    VHDocumentContainer mDocView;
-    VHDocument mDoc;
     RadioGroup mDPIGroup;
     //data
     String currentDPI = "";
+    VHOPS mDocument;
+    VHOPSView mDocView;
 
     private Handler handler = new Handler() {
         @Override
@@ -71,8 +77,27 @@ public class VodPlayerActivity extends Activity {
         recordId = getIntent().getStringExtra("channelid");
         accessToken = getIntent().getStringExtra("token");
         setContentView(R.layout.vod_layout);
+        initView();
+        mDocument = new VHOPS(recordId, null);
+        mDocument.setDocumentView(mDocView);
+        mDocument.setEventListener(new VHOPS.OnEventListener() {
+            @Override
+            public void onEvent(JSONObject object) {
+                Log.i(TAG, "object:" + object.toString());
+//                mPageView.setText("页数：" + (object.optInt("currentPage") + 1) + "/" + object.optInt("page"));
+//                mStepView.setText("步数：" + (object.optInt("currentStep") + 1) + "/" + object.optInt("step"));
+            }
+        });
+        mDocument.join();
+        mPlayer = new VHVodPlayer(this, mSurfaceView);
+        mPlayer.addListener(new MyPlayer());
+        handlePosition();
+    }
+
+    private void initView() {
         mDPIGroup = this.findViewById(R.id.rg_dpi);
         mDocView = this.findViewById(R.id.doc);
+        setLayout();
         mPlayBtn = this.findViewById(R.id.btn_play);
         mLoadingPB = this.findViewById(R.id.pb_loading);
         mSeekbar = this.findViewById(R.id.seekbar);
@@ -90,7 +115,6 @@ public class VodPlayerActivity extends Activity {
                     mPlayer.setDPI(dpi);
             }
         });
-
         mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
@@ -114,26 +138,8 @@ public class VodPlayerActivity extends Activity {
             }
         });
 
-        mPlayer = new VHVodPlayer(this, mSurfaceView);
-        mPlayer.addListener(new MyPlayer());
-        handlePosition();
-        mDoc = new VHDocument(recordId);
-        mDoc.setDocumentView(mDocView);
-        mDoc.join();
-
-//        popu = new DPIPopu(this);
-//        popu.setOnDPIChangedListener(new DPIPopu.OnDPIChangedListener() {
-//            @Override
-//            public void onDPIChanged(String dpi) {
-//                mPlayer.setDPI(dpi);
-//                currentDPI = dpi;
-//            }
-//        });
     }
 
-    //    public void changeDPI(View view) {
-//        popu.showAtLocation(getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
-//    }
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -143,6 +149,7 @@ public class VodPlayerActivity extends Activity {
             timer.cancel();
             timer = null;
         }
+        mDocument.leave();
     }
 
     public void play(View view) {
@@ -282,5 +289,16 @@ public class VodPlayerActivity extends Activity {
         } else {
             return "00:" + strMinute + ":" + strSecond;
         }
+    }
+
+    private void setLayout() {
+        WindowManager manager = getWindowManager();
+        DisplayMetrics metrics = new DisplayMetrics();
+        manager.getDefaultDisplay().getMetrics(metrics);
+        int width = metrics.widthPixels;  //以要素为单位
+        int height = width * 9 / 16;
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mDocView.getLayoutParams();
+        params.width = width;
+        params.height = height;
     }
 }
