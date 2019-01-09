@@ -9,16 +9,16 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vhall.lss.push.IVHCapture;
-import com.vhall.lss.push.IVHLivePusher;
-import com.vhall.lss.push.VHAudioCapture;
-import com.vhall.lss.push.VHLivePushConfig;
-import com.vhall.lss.push.VHLivePushFormat;
 import com.vhall.lss.push.VHLivePusher;
-import com.vhall.lss.push.VHVideoCaptureView;
-import com.vhall.lss.push.listener.VHPushLiveListener;
-import com.vhall.lss.push.renderer.filter.VHBeautyFilter;
 import com.vhall.opensdk.R;
+import com.vhall.player.Constants;
+import com.vhall.player.VHPlayerListener;
+import com.vhall.push.IVHCapture;
+import com.vhall.push.VHAudioCapture;
+import com.vhall.push.VHLivePushConfig;
+import com.vhall.push.VHLivePushFormat;
+import com.vhall.push.VHVideoCaptureView;
+import com.vhall.push.renderer.filter.VHBeautyFilter;
 
 /**
  * Created by Hank on 2017/11/13.
@@ -68,13 +68,13 @@ public class PushActivity extends Activity {
         audioCapture = new VHAudioCapture();
         //初始化直播器
         pusher = new VHLivePusher(videoCapture, audioCapture, config);
-        pusher.addListener(new MyListener());
+        pusher.setListener(new MyListener());
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (pusher.getStatus() == IVHLivePusher.Status.STARTED) {
+        if (pusher.getState() == Constants.State.START) {
             pusher.pause();
         }
     }
@@ -82,8 +82,7 @@ public class PushActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (pusher.resumeAble())
-            pusher.resume();
+        pusher.resume();
     }
 
     @Override
@@ -93,7 +92,7 @@ public class PushActivity extends Activity {
     }
 
     public void push(View view) {
-        if (pusher.getStatus() == IVHLivePusher.Status.STARTED) {
+        if (pusher.getState() == Constants.State.START) {
             pusher.pause();
         } else {
             if (pusher.resumeAble())
@@ -103,6 +102,7 @@ public class PushActivity extends Activity {
         }
 
     }
+
     public void changeFlash(View view) {
         isFlashOpen = videoCapture.changeFlash(!isFlashOpen);
         if (isFlashOpen) {
@@ -114,7 +114,10 @@ public class PushActivity extends Activity {
 
     public void changeCamera(View view) {
         mCameraId = videoCapture.switchCamera();
+        isFlashOpen = false;
+        mFlashBtn.setImageResource(R.mipmap.img_round_audio_close);
     }
+
 
     public void changeFilter(View view) {
         int level = (++mBeautyLevel) % 6;
@@ -151,38 +154,44 @@ public class PushActivity extends Activity {
         videoCapture.setCameraDrawMode(mDrawMode);
     }
 
-    class MyListener implements VHPushLiveListener {
+    class MyListener implements VHPlayerListener {
 
         @Override
         public void onError(int errorCode, int innerErrorCode, String msg) {
             mLoadingView.setVisibility(View.GONE);
             mPushBtn.setImageResource(R.mipmap.icon_start_bro);
             switch (errorCode) {
-                case VHLivePusher.ERROR_PUSH://推送过程出错
+                case Constants.ErrorCode.ERROR_PUSH://推送过程出错
                     break;
-                case VHLivePusher.ERROR_AUDIO_CAPTURE://音频采集过程出错
+                case Constants.ErrorCode.ERROR_AUDIO_CAPTURE://音频采集过程出错
                     break;
-                case VHLivePusher.ERROR_VIDEO_CAPTURE://视频采集过程出错
+                case Constants.ErrorCode.ERROR_VIDEO_CAPTURE://视频采集过程出错
                     break;
             }
             Toast.makeText(PushActivity.this, "push error,errorCode:" + errorCode + ",innerCode:" + innerErrorCode + ",msg:" + msg, Toast.LENGTH_SHORT).show();
         }
 
         @Override
-        public void onEvent(int eventCode, String eventMsg) {
-            switch (eventCode) {
-                case VHLivePusher.EVENT_STATUS_STARTING:
-                    mLoadingView.setVisibility(View.VISIBLE);
-                    break;
-                case VHLivePusher.EVENT_STATUS_STARTED:
+        public void onStateChanged(Constants.State state) {
+            switch (state) {
+                case START:
                     mLoadingView.setVisibility(View.GONE);
                     mPushBtn.setImageResource(R.mipmap.icon_pause_bro);
                     break;
-                case VHLivePusher.EVENT_STATUS_STOPED:
+                case STOP:
                     mLoadingView.setVisibility(View.GONE);
                     mPushBtn.setImageResource(R.mipmap.icon_start_bro);
                     break;
-                case VHLivePusher.EVENT_UPLOAD_SPEED:
+            }
+        }
+
+        @Override
+        public void onEvent(int eventCode, String eventMsg) {
+            switch (eventCode) {
+                case Constants.Event.EVENT_STATUS_STARTING:
+                    mLoadingView.setVisibility(View.VISIBLE);
+                    break;
+                case Constants.Event.EVENT_UPLOAD_SPEED:
                     mSpeedView.setText(eventMsg + "kbps");
                     break;
             }

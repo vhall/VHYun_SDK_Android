@@ -16,11 +16,12 @@ import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.vhall.document.DocumentView;
+import com.vhall.document.IDocument;
 import com.vhall.opensdk.R;
-import com.vhall.ops.IVHOPS;
 import com.vhall.ops.VHOPS;
-import com.vhall.ops.VHOPSView;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -29,9 +30,10 @@ import org.json.JSONObject;
 public class DocActivity extends Activity {
     private static final String TAG = "DocActivity";
     private String mChannelId = "";
+    private String mRoomId = "";
     private String mAccessToken = "";
     VHOPS mDocument;
-    VHOPSView mDocView;
+    DocumentView mDocView;
     //demo view
     Switch mEditableView;
     ScrollView mEditViewContainer;//文档操作容器
@@ -41,27 +43,20 @@ public class DocActivity extends Activity {
     EditText et_color, et_size, et_docid;
     TextView mPageView, mStepView;
 
-    private IVHOPS.DrawAction mAction = IVHOPS.DrawAction.ADD;
-    private IVHOPS.DrawType mType = IVHOPS.DrawType.PATH;
+    private IDocument.DrawAction mAction = IDocument.DrawAction.ADD;
+    private IDocument.DrawType mType = IDocument.DrawType.PATH;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mRoomId = getIntent().getStringExtra("roomid");//纯文档直播可不传
         mChannelId = getIntent().getStringExtra("channelid");
         mAccessToken = getIntent().getStringExtra("token");
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.doc_layout);
         initView();
-        mDocument = new VHOPS(mChannelId, "", mAccessToken);
+        mDocument = new VHOPS(mChannelId, mRoomId, mAccessToken);
         mDocument.setDocumentView(mDocView);
-        mDocument.setEventListener(new VHOPS.OnEventListener() {
-            @Override
-            public void onEvent(JSONObject object) {
-                Log.i(TAG, "object:" + object.toString());
-                mPageView.setText("页数：" + (object.optInt("currentPage") + 1) + "/" + object.optInt("page"));
-                mStepView.setText("步数：" + (object.optInt("currentStep") + 1) + "/" + object.optInt("step"));
-            }
-        });
         mDocument.join();
     }
 
@@ -82,15 +77,15 @@ public class DocActivity extends Activity {
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 switch (checkedId) {
                     case R.id.rb_action_add:
-                        mAction = IVHOPS.DrawAction.ADD;
+                        mAction = IDocument.DrawAction.ADD;
                         mDoodleTypeContainer.setVisibility(View.VISIBLE);
                         break;
                     case R.id.rb_action_modify:
-                        mAction = IVHOPS.DrawAction.MODIFY;
+                        mAction = IDocument.DrawAction.MODIFY;
                         mDoodleTypeContainer.setVisibility(View.GONE);
                         break;
                     case R.id.rb_action_delete:
-                        mAction = IVHOPS.DrawAction.DELETE;
+                        mAction = IDocument.DrawAction.DELETE;
                         mDoodleTypeContainer.setVisibility(View.GONE);
                         break;
                 }
@@ -102,16 +97,16 @@ public class DocActivity extends Activity {
             public void onCheckedChanged(RadioGroup group, int checkedId) {
                 switch (checkedId) {
                     case R.id.rb_path:
-                        mType = IVHOPS.DrawType.PATH;
+                        mType = IDocument.DrawType.PATH;
                         break;
                     case R.id.rb_nite:
-                        mType = IVHOPS.DrawType.NITE;
+                        mType = IDocument.DrawType.NITE;
                         break;
                     case R.id.rb_rect:
-                        mType = IVHOPS.DrawType.RECT;
+                        mType = IDocument.DrawType.RECT;
                         break;
                     case R.id.rb_circle:
-                        mType = IVHOPS.DrawType.CIRCLE;
+                        mType = IDocument.DrawType.CIRCLE;
                         break;
                 }
                 mDocView.setDrawType(mType);
@@ -124,13 +119,26 @@ public class DocActivity extends Activity {
                 mEditViewContainer.setVisibility(isChecked ? View.VISIBLE : View.INVISIBLE);
             }
         });
-        mDocView.setOnEventListener(new VHOPSView.EventListener() {
+        mDocView.addListener(new DocumentView.EventListener() {
             @Override
-            public void onEvent(int eventCode, String eventMsg) {
-                switch (eventCode) {
-                    case VHOPSView.EVENT_DOC_LOADED:
-                        mDocView.setAction(mAction);
-                        mDocView.setDrawType(mType);
+            public void onEvent(int i, String s) {
+                switch (i) {
+                    case DocumentView.EVENT_PAGE_LOADED:
+                        break;
+                    case DocumentView.EVENT_DOC_LOADED:
+                        Log.i(TAG, "当前文档ID：" + mDocument.getDocId() + " 当前文档hash:" + s);
+
+                        break;
+                    case DocumentView.EVENT_DOODLE:
+                        Log.i(TAG, "object:" + s);
+                        JSONObject object = null;
+                        try {
+                            object = new JSONObject(s);
+                            mPageView.setText("页数：" + (object.optInt("currentPage") + 1) + "/" + object.optInt("page"));
+                            mStepView.setText("步数：" + (object.optInt("currentStep") + 1) + "/" + object.optInt("step"));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                         break;
                 }
             }
@@ -174,7 +182,7 @@ public class DocActivity extends Activity {
         String docid = et_docid.getText().toString();
         if (TextUtils.isEmpty(docid))
             return;
-        mDocView.setDoc(docid);
+        mDocument.setDoc(docid);
     }
 
     @Override

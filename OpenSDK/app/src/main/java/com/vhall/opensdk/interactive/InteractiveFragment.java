@@ -28,7 +28,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vhall.ilss.VHILSS;
 import com.vhall.ilss.VHInteractive;
 import com.vhall.opensdk.ConfigActivity;
 import com.vhall.opensdk.R;
@@ -56,11 +55,11 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     HorizontalScrollView hsv_streams;
     LinearLayout mLayoutGroup;//远程流渲染view存放地
     VHRenderView localView;//本地流渲染view
-
+    Stream localStream;
     Button mReqBtn, mJoinBtn, mQuitBtn, mMemberBtn;
     AlertDialog mDialog;
     ImageView mSwitchCameraBtn, mInfoBtn;
-    CheckBox mBroadcastTB, mVideoTB, mAudioTB;
+    CheckBox mBroadcastTB, mVideoTB, mAudioTB, mDualTB;
     TextView mOnlineTV;
 
     Handler mHandler = new Handler();
@@ -108,13 +107,10 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         SharedPreferences sp = mContext.getSharedPreferences("config", Context.MODE_PRIVATE);
         mBroadcastid = sp.getString(ConfigActivity.KEY_BROCASTID, "");
         mDefinition = sp.getInt(ConfigActivity.KEY_PIX_TYPE, 0);
-
         interactive = new VHInteractive(mContext, new RoomListener());
-        interactive.setDefinition(VHILSS.HD);
         interactive.setOnMessageListener(new MyMessageListener());
-        localView.init(interactive.getEglBase().getEglBaseContext(), null);
-        localView.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
-        interactive.setLocalView(localView, Stream.VhallStreamType.VhallStreamTypeAudioAndVideo);
+        initLocalView();
+        initLocalStream();
         interactive.init(mRoomId, mAccessToken, new VHInteractive.InitCallback() {
             @Override
             public void onSuccess() {
@@ -131,10 +127,19 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         });
     }
 
+    private void initLocalView() {
+        localView.init(null, null);
+        localView.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
+    }
+
+    private void initLocalStream() {
+        localStream = interactive.createLocalStream(Stream.VhallFrameResolutionValue.VhallFrameResolution320x240.getValue(), "paassdk");
+        localView.setStream(localStream);
+    }
+
 
     @Override
     public void onClick(View v) {
-
         switch (v.getId()) {
             case R.id.btn_join:
                 clickEventJoin();
@@ -146,7 +151,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                 clickEventReq();
                 break;
             case R.id.iv_camera:
-                interactive.getLocalStream().switchCamera();
+                localStream.switchCamera();
                 break;
             case R.id.btn_members:
                 showMember(true, null);
@@ -160,7 +165,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     public void ClickEventEnter() {//进入房间
         if (!isEnable)
             return;
-        interactive.enterRoom();
+        interactive.enterRoom("userdata");
     }
 
     public void clickEventReq() {//申请上麦
@@ -203,7 +208,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             return;
         }
         interactive.publish();
-        interactive.getLocalStream().startStats(new Stream.StatsCallback() {
+        localStream.startStats(new Stream.StatsCallback() {
             @Override
             public void onResponse(String s, long l, final Map<String, String> map) {
                 if (s.equals("video")) {
@@ -314,7 +319,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
         @Override
         public void onDidSubscribeStream(Room room, Stream stream) {//订阅其他流
-            Log.i(TAG, "onDidSubscribeStream");
+            Log.e(TAG, "onDidSubscribeStream" + stream.streamId);
             addStream(stream);
         }
 
@@ -326,7 +331,29 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
         @Override
         public void onDidChangeStatus(Room room, Room.VHRoomStatus vhRoomStatus) {//状态改变
-            Log.i(TAG, "onDidChangeStatus");
+            switch (vhRoomStatus) {
+                case VHRoomStatusDisconnected:// 异常退出
+                    //TODO 销毁页面
+                    Log.e(TAG, "VHRoomStatusDisconnected");
+                    break;
+                case VHRoomStatusError:
+                    Log.e(TAG, "VHRoomStatusError");
+                    openErrorDialog();
+                    break;
+                case VHRoomStatusReady:
+                    Log.e(TAG, "VHRoomStatusReady");
+                    break;
+                case VHRoomStatusConnected: // 重连进房间
+                    removeAllStream();
+                    if (isOnline) { // 当房间重连,如果之前已经上麦,则重连后自动上麦,如果之前没有上麦,则点击按钮上麦
+                        isOnline = false;
+                        clickEventJoin();
+                    }
+                    Log.e(TAG, "VHRoomStatusConnected");
+                    break;
+                default:
+                    break;
+            }
         }
 
         @Override
@@ -337,7 +364,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
         @Override
         public void onDidRemoveStream(Room room, Stream stream) {//有流退出
-            Log.i(TAG, "onDidRemoveStream");
+            Log.e(TAG, "onDidRemoveStream : " + stream.streamId);
             removeStream(stream);
         }
 
@@ -349,8 +376,22 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
         @Override
         public void onReconnect(int i, int i1) {
+            Log.e(TAG, "onReconnect" + i + " i1 " + i1);
+        }
+
+        @Override
+        public void onStreamMixed(JSONObject jsonObject) {
 
         }
+    }
+
+    private void openErrorDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setTitle("已离开互动房间");
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            getActivity().finish();//结束App
+        });
+        builder.show();
     }
 
     class MyMessageListener implements VHInteractive.OnMessageListener {
@@ -444,25 +485,25 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                 CheckBox audioBtn = view.findViewById(R.id.cb_audio);
                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.MATCH_PARENT);
                 view.setLayoutParams(params);
-                renderView.init(interactive.getEglBase().getEglBaseContext(), null);
+                renderView.init(null, null);
                 renderView.setStream(stream);
                 view.setTag(stream);
                 videoBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         if (isChecked)//关闭视频开
-                            stream.muteVideo();
+                            stream.muteVideo(null);
                         else//关闭视频关
-                            stream.unmuteVideo();
+                            stream.unmuteVideo(null);
                     }
                 });
                 audioBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                         if (isChecked)
-                            stream.muteAudio();
+                            stream.muteAudio(null);
                         else//关闭视频关
-                            stream.unmuteAudio();
+                            stream.unmuteAudio(null);
                     }
                 });
                 mLayoutGroup.addView(view);
@@ -488,16 +529,35 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     }
 
     private void removeStream(final Stream stream) {
-        if (stream == null)
-            return;
-        int childCount = mLayoutGroup.getChildCount();
-        for (int i = 0; i < childCount; i++) {
-            View view = mLayoutGroup.getChildAt(i);
-            if ((view.getTag()) == stream) {
-                mLayoutGroup.removeView(view);
-                break;
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (stream == null)
+                    return;
+                int childCount = mLayoutGroup.getChildCount();
+                for (int i = 0; i < childCount; i++) {
+                    View view = mLayoutGroup.getChildAt(i);
+                    if ((view.getTag()) == stream) {
+                        mLayoutGroup.removeView(view);
+                        break;
+                    }
+                }
             }
-        }
+        });
+
+    }
+
+    private void removeAllStream() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                int childCount = mLayoutGroup.getChildCount();
+                if (childCount > 0) {
+                    mLayoutGroup.removeAllViews();
+                }
+            }
+        });
+
     }
 
     @Override
@@ -525,7 +585,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     public void onDestroy() {
         if (mDialog != null && mDialog.isShowing())
             mDialog.dismiss();
-        interactive.destory();
+        interactive.release();
         super.onDestroy();
     }
 
@@ -539,6 +599,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mBroadcastTB = getView().findViewById(R.id.tb_broadcast);
         mVideoTB = getView().findViewById(R.id.tb_video);
         mAudioTB = getView().findViewById(R.id.tb_audio);
+        mDualTB = getView().findViewById(R.id.tb_dual);
         hsv_streams = getView().findViewById(R.id.hsv_streams);
         mSwitchCameraBtn = getView().findViewById(R.id.iv_camera);
         mMemberBtn = getView().findViewById(R.id.btn_members);
@@ -550,6 +611,12 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mMemberBtn.setOnClickListener(this);
         mSwitchCameraBtn.setOnClickListener(this);
         mInfoBtn.setOnClickListener(this);
+        mDualTB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                localStream.changeVoiceType(isChecked ? 1 : 0);
+            }
+        });
         mBroadcastTB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -566,9 +633,9 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked)//关闭视频开
-                    interactive.getLocalStream().muteVideo();
+                    localStream.muteVideo(null);
                 else//关闭视频关
-                    interactive.getLocalStream().unmuteVideo();
+                    localStream.unmuteVideo(null);
 
             }
         });
@@ -576,9 +643,9 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked)
-                    interactive.getLocalStream().muteAudio();
+                    localStream.muteAudio(null);
                 else
-                    interactive.getLocalStream().unmuteAudio();
+                    localStream.unmuteAudio(null);
 
             }
         });

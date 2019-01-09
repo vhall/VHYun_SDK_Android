@@ -29,7 +29,7 @@
         android:id="@+id/et_channelid"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:hint="@string/hint"/>
+        android:hint="channelid或recordid或roomid"/>
 
     <EditText
         android:id="@+id/et_token"

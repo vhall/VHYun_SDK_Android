@@ -15,9 +15,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vhall.framework.connect.ConnectServer;
-import com.vhall.framework.VhallConnectService;
+import com.vhall.framework.connect.VhallConnectService;
 import com.vhall.ims.VHIM;
+import com.vhall.message.ConnectServer;
 import com.vhall.opensdk.R;
 import org.json.JSONException;
 import org.json.JSONObject;

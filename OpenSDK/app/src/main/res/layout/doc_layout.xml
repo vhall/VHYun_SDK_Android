@@ -22,16 +22,15 @@
     </RelativeLayout>
 
     <RelativeLayout
-
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_weight="1.5">
 
-        <com.vhall.ops.VHOPSView
+        <com.vhall.document.DocumentView
             android:id="@+id/opsview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"></com.vhall.ops.VHOPSView>
+            android:layout_centerInParent="true"></com.vhall.document.DocumentView>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -202,20 +201,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/btn_clear"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:onClick="clickEventClear"
-                    android:text="清空画笔" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
                 <EditText
                     android:id="@+id/et_color"
                     android:layout_width="0dp"
@@ -268,6 +253,12 @@
                     android:text="设置文档" />
             </LinearLayout>
 
+            <Button
+                android:id="@+id/btn_clear"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="clickEventClear"
+                android:text="清空画笔" />
 
         </LinearLayout>
 

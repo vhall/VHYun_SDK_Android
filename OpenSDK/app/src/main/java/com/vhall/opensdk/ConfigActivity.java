@@ -17,8 +17,6 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
-import com.vhall.opensdk.watchplayback.VodPlayerActivity;
-
 import java.util.List;
 
 import static android.Manifest.permission.CAMERA;

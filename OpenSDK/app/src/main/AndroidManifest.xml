@@ -60,7 +60,7 @@
             android:name=".ConfigActivity"
             android:screenOrientation="portrait"></activity>
 
-        <service android:name="com.vhall.framework.VhallConnectService"></service>
+        <service android:name="com.vhall.framework.connect.VhallConnectService"></service>
     </application>
 
 </manifest>

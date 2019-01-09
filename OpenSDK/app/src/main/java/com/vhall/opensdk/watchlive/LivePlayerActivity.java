@@ -14,12 +14,14 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vhall.lss.play.IVHLivePlayer;
-import com.vhall.lss.play.IVHVideoPlayer;
+import com.vhall.logmanager.L;
 import com.vhall.lss.play.VHLivePlayer;
-import com.vhall.lss.play.impl.VHVideoPlayerView;
-import com.vhall.lss.play.VHPlayerListener;
 import com.vhall.opensdk.R;
+import com.vhall.opensdk.watchplayback.VodPlayerActivity;
+import com.vhall.player.Constants;
+import com.vhall.player.VHPlayerListener;
+import com.vhall.player.stream.play.IVHVideoPlayer;
+import com.vhall.player.stream.play.impl.VHVideoPlayerView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -61,16 +63,24 @@ public class LivePlayerActivity extends Activity {
         mPlayBtn = this.findViewById(R.id.btn_play);
         mLoadingPB = this.findViewById(R.id.pb_loading);
         mSpeedTV = this.findViewById(R.id.tv_speed);
-        mDPIGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                String dpi = ((RadioButton) mDPIGroup.getChildAt(checkedId)).getText().toString();
-                if (!dpi.equals(currentDPI))
-                    mPlayer.setDPI(dpi);
-            }
-        });
+        mDPIGroup.setOnCheckedChangeListener(new OnCheckedChange());
 
-        mPlayer = new VHLivePlayer.Builder().videoPlayer(mVideoPlayer).listener(new MyListener()).build();
+
+        mPlayer = new VHLivePlayer.Builder()
+                .videoPlayer(mVideoPlayer)
+                .listener(new MyListener())
+                .build();
+    }
+
+    private class OnCheckedChange implements RadioGroup.OnCheckedChangeListener {
+
+        @Override
+        public void onCheckedChanged(RadioGroup group, int checkedId) {
+            L.e(TAG, String.valueOf(checkedId));
+            String dpi = ((RadioButton) mDPIGroup.getChildAt(checkedId)).getText().toString();
+            if (!dpi.equals(currentDPI))
+                mPlayer.setDPI(dpi);
+        }
     }
 
     @Override
@@ -112,22 +122,38 @@ public class LivePlayerActivity extends Activity {
     class MyListener implements VHPlayerListener {
 
         @Override
-        public void onEvent(int event, String msg) {
-
-            switch (event) {
-                case IVHLivePlayer.EVENT_STATUS_STARTING:
-                    break;
-                case IVHLivePlayer.EVENT_STATUS_STARTED:
+        public void onStateChanged(Constants.State state) {
+            switch (state) {
+                case START:
+                    mLoadingPB.setVisibility(View.GONE);
                     mPlayBtn.setImageResource(R.mipmap.icon_pause_bro);
                     break;
-                case IVHLivePlayer.EVENT_STATUS_STOPED:
+                case BUFFER:
+                    mLoadingPB.setVisibility(View.VISIBLE);
+                    break;
+                case STOP:
+                    mLoadingPB.setVisibility(View.GONE);
                     mPlayBtn.setImageResource(R.mipmap.icon_start_bro);
                     break;
-                case IVHLivePlayer.EVENT_DPI_LIST:
+                case END:
+
+                    break;
+
+            }
+        }
+
+        @Override
+        public void onEvent(int event, String msg) {
+            switch (event) {
+                case Constants.Event.EVENT_DPI_LIST:
                     Log.i(TAG, "DPILIST:" + msg);
                     try {
                         JSONArray array = new JSONArray(msg);
                         if (array != null && array.length() > 0) {
+                            //未取消监听情况下清空选中状态，会造成crash
+                            mDPIGroup.setOnCheckedChangeListener(null);
+                            //需要清空当前选中状态，下次设置才能生效
+                            mDPIGroup.clearCheck();
                             mDPIGroup.removeAllViews();
                             for (int i = 0; i < array.length(); i++) {
                                 String dpi = (String) array.opt(i);
@@ -137,14 +163,14 @@ public class LivePlayerActivity extends Activity {
                                 rb.setTextColor(Color.WHITE);
                                 mDPIGroup.addView(rb);
                             }
+                            mDPIGroup.setOnCheckedChangeListener(new OnCheckedChange());
                         }
-
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
 //                    popu.notifyDataSetChanged(currentDPI, dipList);
                     break;
-                case IVHLivePlayer.EVENT_DPI_CHANGED:
+                case Constants.Event.EVENT_DPI_CHANGED:
                     Log.i(TAG, "DPI:" + msg);
                     for (int i = 0; i < mDPIGroup.getChildCount(); i++) {
                         RadioButton button = (RadioButton) mDPIGroup.getChildAt(i);
@@ -155,24 +181,21 @@ public class LivePlayerActivity extends Activity {
                         }
                     }
                     break;
-                case IVHLivePlayer.EVENT_URL:
+                case Constants.Event.EVENT_URL:
                     TextView textView = new TextView(LivePlayerActivity.this);
                     textView.setText(currentDPI + ":" + msg);
                     ll_urls.addView(textView);
                     break;
-                case IVHLivePlayer.EVENT_DOWNLOAD_SPEED:
+                case Constants.Event.EVENT_DOWNLOAD_SPEED:
                     mSpeedTV.setText(msg + "kb/s");
                     break;
-                case IVHLivePlayer.EVENT_START_BUFFER:
-                    mLoadingPB.setVisibility(View.VISIBLE);
-                    break;
-                case IVHLivePlayer.EVENT_STOP_BUFFER:
+                case Constants.Event.EVENT_STOP_BUFFER:
                     mLoadingPB.setVisibility(View.GONE);
                     break;
-                case IVHLivePlayer.EVENT_VIDEO_SIZE_CHANGED:
+                case Constants.Event.EVENT_VIDEO_SIZE_CHANGED:
                     Log.i(TAG, msg);
                     break;
-                case IVHLivePlayer.EVENT_STREAM_START://发起端发起
+                case Constants.Event.EVENT_STREAM_START://发起端发起
                     if (mPlayer.isPlaying()) {
                         return;
                     }
@@ -180,8 +203,8 @@ public class LivePlayerActivity extends Activity {
                     if (mPlayer.resumeAble())
                         mPlayer.resume();
                     break;
-                case IVHLivePlayer.EVENT_STREAM_STOP://发起端停止
-                    if (mPlayer.isPlaying()) {
+                case Constants.Event.EVENT_STREAM_STOP://发起端停止
+                    if (!mPlayer.isPlaying()) {
                         return;
                     }
                     Toast.makeText(LivePlayerActivity.this, "主播停止推流", Toast.LENGTH_SHORT).show();
@@ -193,14 +216,18 @@ public class LivePlayerActivity extends Activity {
         }
 
         @Override
-        public void onError(int errorCode, String msg) {
+        public void onError(int errorCode, int innerCode, String msg) {
             mLoadingPB.setVisibility(View.GONE);
             Log.i(TAG, "errorCode:" + errorCode + ",msg:" + msg);
             switch (errorCode) {
-                case IVHLivePlayer.ERROR_CONNECT:
+                case Constants.ErrorCode.ERROR_CONNECT:
+                    mLoadingPB.setVisibility(View.GONE);
+                    mPlayBtn.setImageResource(R.mipmap.icon_start_bro);
+                    Toast.makeText(LivePlayerActivity.this, "Error message:" + msg, Toast.LENGTH_SHORT).show();
                     break;
-            }
 
+            }
         }
+
     }
 }

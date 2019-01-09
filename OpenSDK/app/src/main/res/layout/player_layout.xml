@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.vhall.lss.play.impl.VHVideoPlayerView
+    <com.vhall.player.stream.play.impl.VHVideoPlayerView
         android:id="@+id/player"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

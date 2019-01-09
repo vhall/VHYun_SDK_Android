@@ -4,10 +4,10 @@
     android:layout_height="match_parent">
 
 
-    <com.vhall.lss.push.VHVideoCaptureView
+    <com.vhall.push.VHVideoCaptureView
         android:id="@+id/videoCaptureView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></com.vhall.lss.push.VHVideoCaptureView>
+        android:layout_height="match_parent"/>
 
 
     <RelativeLayout

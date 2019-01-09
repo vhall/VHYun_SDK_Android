@@ -65,6 +65,93 @@
             android:orientation="horizontal">
 
         </RadioGroup>
+
+
+        <ImageView
+            android:id="@+id/iv_about_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_gravity="center"
+            android:layout_marginTop="15dp"
+            android:onClick="aboutSpeed"
+            android:src="@drawable/ic_chevron_right_white_24dp" />
+
+        <RadioGroup
+            android:id="@+id/rg_speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_below="@id/iv_about_speed"
+            android:background="#8fffffff"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/rb_speed1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:button="@null"
+                android:drawableLeft="@drawable/selector_check_circle_black"
+                android:text="0.25" />
+
+            <RadioButton
+                android:id="@+id/rb_speed2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:button="@null"
+                android:drawableLeft="@drawable/selector_check_circle_black"
+                android:text="0.5" />
+
+            <RadioButton
+                android:id="@+id/rb_speed3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:button="@null"
+                android:drawableLeft="@drawable/selector_check_circle_black"
+                android:text="0.75" />
+
+            <RadioButton
+                android:id="@+id/rb_speed4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:button="@null"
+                android:checked="true"
+                android:drawableLeft="@drawable/selector_check_circle_black"
+                android:text="正常" />
+
+            <RadioButton
+                android:id="@+id/rb_speed5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:button="@null"
+                android:drawableLeft="@drawable/selector_check_circle_black"
+                android:text="1.25" />
+
+            <RadioButton
+                android:id="@+id/rb_speed6"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:button="@null"
+                android:drawableLeft="@drawable/selector_check_circle_black"
+                android:text="1.5" />
+
+            <RadioButton
+                android:id="@+id/rb_speed7"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:button="@null"
+                android:drawableLeft="@drawable/selector_check_circle_black"
+                android:text="1.75" />
+
+            <RadioButton
+                android:id="@+id/rb_speed8"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:button="@null"
+                android:drawableLeft="@drawable/selector_check_circle_black"
+                android:text="2" />
+        </RadioGroup>
+
     </RelativeLayout>
 
     <RelativeLayout
@@ -72,11 +159,11 @@
         android:layout_height="0dp"
         android:layout_weight="2">
 
-        <com.vhall.ops.VHOPSView
+        <com.vhall.document.DocumentView
             android:id="@+id/doc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"></com.vhall.ops.VHOPSView>
+            android:layout_centerInParent="true" />
 
     </RelativeLayout>
 

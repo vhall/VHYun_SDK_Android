@@ -155,8 +155,15 @@ public class MainActivity extends Activity {
         String token = et_token.getText().toString();
         if (TextUtils.isEmpty(roomid) || TextUtils.isEmpty(token))
             return;
-        intent.putExtra("channelid", roomid);
-        intent.putExtra("token", token);
+        if (roomid.contains(",")) {
+            String[] data = roomid.split(",");
+            intent.putExtra("roomid", data[0]);
+            intent.putExtra("channelid", data[1]);
+            intent.putExtra("token", token);
+        } else {
+            intent.putExtra("channelid", roomid);
+            intent.putExtra("token", token);
+        }
         startActivity(intent);
         SharedPreferences.Editor editor = sp.edit();
         editor.putString("key_roomid", roomid);

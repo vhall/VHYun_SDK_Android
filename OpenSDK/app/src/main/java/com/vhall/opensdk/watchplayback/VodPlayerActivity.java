@@ -7,10 +7,12 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -20,16 +22,13 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vhall.framework.logger.L;
-import com.vhall.lss.play.IVHLivePlayer;
+import com.vhall.document.DocumentView;
+import com.vhall.logmanager.L;
 import com.vhall.opensdk.R;
-import com.vhall.ops.VHDocument;
-import com.vhall.ops.VHDocumentContainer;
 import com.vhall.ops.VHOPS;
-import com.vhall.ops.VHOPSView;
-import com.vhall.vod.VHPlayerListener;
+import com.vhall.player.Constants;
+import com.vhall.player.VHPlayerListener;
 import com.vhall.vod.VHVodPlayer;
-import com.vhall.vod.player.VHExoPlayer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,15 +47,18 @@ public class VodPlayerActivity extends Activity {
     private SurfaceView mSurfaceView;
     private VHVodPlayer mPlayer;
     private boolean mPlaying = false;
-    ImageView mPlayBtn;
+    ImageView mPlayBtn, ivAboutSpeed;
     ProgressBar mLoadingPB;
     SeekBar mSeekbar;
     TextView mPosView, mMaxView;
     RadioGroup mDPIGroup;
+    TextView mSpeedOneView, mSpeedTwoView, mSpeedThreeView;
     //data
     String currentDPI = "";
     VHOPS mDocument;
-    VHOPSView mDocView;
+    DocumentView mDocView;
+    private boolean isInit = false;
+    private RadioGroup speedGroup;
 
     private Handler handler = new Handler() {
         @Override
@@ -80,17 +82,10 @@ public class VodPlayerActivity extends Activity {
         initView();
         mDocument = new VHOPS(recordId, null);
         mDocument.setDocumentView(mDocView);
-        mDocument.setEventListener(new VHOPS.OnEventListener() {
-            @Override
-            public void onEvent(JSONObject object) {
-                Log.i(TAG, "object:" + object.toString());
-//                mPageView.setText("页数：" + (object.optInt("currentPage") + 1) + "/" + object.optInt("page"));
-//                mStepView.setText("步数：" + (object.optInt("currentStep") + 1) + "/" + object.optInt("step"));
-            }
-        });
         mDocument.join();
-        mPlayer = new VHVodPlayer(this, mSurfaceView);
-        mPlayer.addListener(new MyPlayer());
+        mPlayer = new VHVodPlayer(this);
+        mPlayer.setDisplay(mSurfaceView);
+        mPlayer.setListener(new MyPlayer());
         handlePosition();
     }
 
@@ -104,77 +99,116 @@ public class VodPlayerActivity extends Activity {
         mSurfaceView = this.findViewById(R.id.surfaceview);
         mPosView = this.findViewById(R.id.tv_pos);
         mMaxView = this.findViewById(R.id.tv_max);
-        mSeekbar.setOnSeekBarChangeListener(new MySeekbarListener());
-        mSeekbar.setEnabled(false);
-        mDPIGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+        speedGroup = findViewById(R.id.rg_speed);
+        ivAboutSpeed = findViewById(R.id.iv_about_speed);
+
+        speedGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup group, int checkedId) {
-                L.e(TAG, String.valueOf(checkedId));
-                String dpi = ((RadioButton) mDPIGroup.getChildAt(checkedId)).getText().toString();
-                if (!dpi.equals(currentDPI))
-                    mPlayer.setDPI(dpi);
+                float speed = 1.0f;
+                switch (checkedId) {
+                    case R.id.rb_speed1:
+                        speed = 0.25f;
+                        break;
+                    case R.id.rb_speed2:
+                        speed = 0.5f;
+                        break;
+                    case R.id.rb_speed3:
+                        speed = 0.75f;
+                        break;
+                    case R.id.rb_speed4:
+                        speed = 1.0f;
+                        break;
+                    case R.id.rb_speed5:
+                        speed = 1.25f;
+                        break;
+                    case R.id.rb_speed6:
+                        speed = 1.5f;
+                        break;
+                    case R.id.rb_speed7:
+                        speed = 1.75f;
+                        break;
+                    case R.id.rb_speed8:
+                        speed = 2.0f;
+                        break;
+                }
+                setSpeed(speed);
             }
         });
-        mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                if (mPlayer != null && mPlayer.resumeAble()) {
-                    mPlayer.setBackground(false);
-                    mPlayer.resume();
-                }
-            }
 
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-            }
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                if (mPlayer != null) {
-                    mPlayer.pause();
-                    mPlayer.setBackground(true);
-                }
-
-            }
-        });
-
+        mSeekbar.setOnSeekBarChangeListener(new MySeekbarListener());
+        mSeekbar.setEnabled(false);
+        mDPIGroup.setOnCheckedChangeListener(new OnCheckedChange());
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mPlayer != null)
-            mPlayer.release();
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
+
+    public void aboutSpeed(View view) {
+        if (speedGroup.getVisibility() == View.VISIBLE) {
+            TranslateAnimation animation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 1.0f
+                    , Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
+            animation.setDuration(1000);
+            speedGroup.startAnimation(animation);
+            speedGroup.setVisibility(View.GONE);
+            ivAboutSpeed.setImageResource(R.drawable.ic_chevron_left_white_24dp);
+        } else {
+            speedGroup.setVisibility(View.VISIBLE);
+            TranslateAnimation animation = new TranslateAnimation(Animation.RELATIVE_TO_SELF, 1.0f, Animation.RELATIVE_TO_SELF, 0.0f
+                    , Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
+            animation.setDuration(1000);
+            speedGroup.startAnimation(animation);
+            ivAboutSpeed.setImageResource(R.drawable.ic_chevron_right_white_24dp);
         }
-        mDocument.leave();
+    }
+
+    private class OnCheckedChange implements RadioGroup.OnCheckedChangeListener {
+
+        @Override
+        public void onCheckedChanged(RadioGroup group, int checkedId) {
+            L.e(TAG, String.valueOf(checkedId));
+            String dpi = ((RadioButton) mDPIGroup.getChildAt(checkedId)).getText().toString();
+            if (!dpi.equals(currentDPI))
+                mPlayer.setDPI(dpi);
+        }
+    }
+
+    private void init() {
+        mPlayer.init(recordId, accessToken);
+    }
+
+
+    private void setSpeed(float speed) {
+        mPlayer.setSpeed(speed);
     }
 
     public void play(View view) {
-        if (mPlaying) {
-            mPlayer.pause();
+        if (!isInit) {
+            init();
         } else {
-            if (mPlayer.resumeAble()) {
-                if (mPlayer.getPlayerState() == VHExoPlayer.STATE_ENDED)
-                    mPlayer.seek(0);
-                else
+            if (mPlaying) {
+                mPlayer.pause();
+            } else {
+                if (mPlayer.getState() == Constants.State.END) {
+                    mPlayer.seekto(0);
+                } else if (mPlayer.getState() == Constants.State.STOP) {
                     mPlayer.resume();
-            } else
-                mPlayer.start(recordId, accessToken);
+                } else {
+                    mPlayer.start();
+
+                }
+            }
         }
     }
 
     class MyPlayer implements VHPlayerListener {
 
         @Override
-        public void onEvent(int event, String msg) {
-            switch (event) {
-                case VHVodPlayer.EVENT_STATUS_STARTING:
+        public void onStateChanged(Constants.State state) {
+            switch (state) {
+                case BUFFER:
                     mLoadingPB.setVisibility(View.VISIBLE);
+
                     break;
-                case VHVodPlayer.EVENT_STATUS_STARTED:
+                case START:
                     int max = (int) mPlayer.getDuration();
                     mSeekbar.setMax(max);
                     mSeekbar.setEnabled(true);
@@ -183,23 +217,34 @@ public class VodPlayerActivity extends Activity {
                     mPlaying = true;
                     mPlayBtn.setImageResource(R.mipmap.icon_pause_bro);
                     break;
-                case VHVodPlayer.EVENT_STATUS_STOPED:
+                case STOP:
+                case END:
                     mPlaying = false;
                     mPlayBtn.setImageResource(R.mipmap.icon_start_bro);
                     mLoadingPB.setVisibility(View.GONE);
                     break;
-                case VHVodPlayer.EVENT_STATUS_END:
-                    mPlaying = false;
-                    mPlayBtn.setImageResource(R.mipmap.icon_start_bro);
-                    mLoadingPB.setVisibility(View.GONE);
+            }
+
+        }
+
+        @Override
+        public void onEvent(int event, String msg) {
+            switch (event) {
+                case Constants.Event.EVENT_INIT_SUCCESS://初始化成功
+                    isInit = true;
+                    mPlayer.start();
                     break;
-                case VHVodPlayer.EVENT_VIDEO_SIZE_CHANGED:
+                case Constants.Event.EVENT_VIDEO_SIZE_CHANGED:
 
                     break;
-                case IVHLivePlayer.EVENT_DPI_LIST:
+                case Constants.Event.EVENT_DPI_LIST:
                     try {
                         JSONArray array = new JSONArray(msg);
                         if (array != null && array.length() > 0) {
+                            //未取消监听情况下清空选中状态，会造成crash
+                            mDPIGroup.setOnCheckedChangeListener(null);
+                            //需要清空当前选中状态，下次设置才能生效
+                            mDPIGroup.clearCheck();
                             mDPIGroup.removeAllViews();
                             for (int i = 0; i < array.length(); i++) {
                                 String dpi = (String) array.opt(i);
@@ -209,6 +254,7 @@ public class VodPlayerActivity extends Activity {
                                 rb.setTextColor(Color.WHITE);
                                 mDPIGroup.addView(rb);
                             }
+                            mDPIGroup.setOnCheckedChangeListener(new OnCheckedChange());
                         }
 
                     } catch (JSONException e) {
@@ -216,7 +262,7 @@ public class VodPlayerActivity extends Activity {
                     }
 //                    popu.notifyDataSetChanged(currentDPI, dipList);
                     break;
-                case IVHLivePlayer.EVENT_DPI_CHANGED:
+                case Constants.Event.EVENT_DPI_CHANGED:
                     for (int i = 0; i < mDPIGroup.getChildCount(); i++) {
                         RadioButton button = (RadioButton) mDPIGroup.getChildAt(i);
                         if (button.getText().equals(msg)) {
@@ -230,12 +276,21 @@ public class VodPlayerActivity extends Activity {
         }
 
         @Override
-        public void onError(int errorCode, String msg) {
+        public void onError(int errorCode, int i1, String msg) {
+            switch (errorCode) {
+                case Constants.ErrorCode.ERROR_INIT:
+                    isInit = false;
+                    Toast.makeText(VodPlayerActivity.this, "初始化失败" + msg, Toast.LENGTH_SHORT).show();
+                    break;
+                case Constants.ErrorCode.ERROR_INIT_FIRST:
+                    Toast.makeText(VodPlayerActivity.this, "请先初始化", Toast.LENGTH_SHORT).show();
+                    break;
+            }
             mPlaying = false;
             mPlayBtn.setImageResource(R.mipmap.icon_start_bro);
             mLoadingPB.setVisibility(View.GONE);
-            Toast.makeText(VodPlayerActivity.this, msg, Toast.LENGTH_SHORT).show();
         }
+
     }
 
     class MySeekbarListener implements SeekBar.OnSeekBarChangeListener {
@@ -252,9 +307,23 @@ public class VodPlayerActivity extends Activity {
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-            if (mPlayer.resumeAble())
-                mPlayer.seek(seekBar.getProgress());
+            if (isInit)
+                mPlayer.seekto(seekBar.getProgress());
         }
+
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mPlayer != null)
+            mPlayer.release();
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+        mDocument.leave();
     }
 
     //每秒获取一下进度
