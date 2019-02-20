@@ -7,9 +7,10 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:background="#000000">
 
-        <SurfaceView
+        <com.vhall.player.vod.VodPlayerView
             android:id="@+id/surfaceview"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
@@ -152,6 +153,56 @@
                 android:text="2" />
         </RadioGroup>
 
+        <ImageView
+            android:id="@+id/iv_screen_shot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:onClick="screenShot"
+            android:padding="10dp"
+            android:src="@drawable/ic_image_white_24dp" />
+
+        <CheckBox
+            android:id="@+id/switch_free_seek"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/iv_screen_shot"
+            android:checked="true"
+            android:text="FreeSeek"
+            android:textColor="#5fffffff" />
+
+
+
+        <RadioGroup
+            android:id="@+id/rg_water_mark_gravity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/rb_water_mark_c"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="c"
+                android:textColor="#ffffff"/>
+
+            <RadioButton
+                android:id="@+id/rb_water_mark_t"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="t"
+                android:textColor="#ffffff"/>
+
+            <RadioButton
+                android:id="@+id/rb_water_mark_b"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="b"
+                android:textColor="#ffffff"/>
+        </RadioGroup>
     </RelativeLayout>
 
     <RelativeLayout
@@ -164,6 +215,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true" />
+        <ImageView
+            android:id="@+id/iv_screen_show"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="dismissScreenShow"
+            android:visibility="gone"/>
 
     </RelativeLayout>
 

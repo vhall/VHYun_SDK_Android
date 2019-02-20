@@ -126,8 +126,15 @@ public class DocActivity extends Activity {
                     case DocumentView.EVENT_PAGE_LOADED:
                         break;
                     case DocumentView.EVENT_DOC_LOADED:
-                        Log.i(TAG, "当前文档ID：" + mDocument.getDocId() + " 当前文档hash:" + s);
-
+                        Log.i(TAG, "当前文档ID：" + mDocument.getDocId() + " 当前文档opts:" + s);
+                        JSONObject optJson = null;
+                        try {
+                            optJson = new JSONObject(s);
+                            mPageView.setText("页数：" + optJson.optString("show_page") + "/" + optJson.optString("page"));
+//                            mStepView.setText("步数：" + (object.optInt("currentStep") + 1) + "/" + object.optInt("step"));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                         break;
                     case DocumentView.EVENT_DOODLE:
                         Log.i(TAG, "object:" + s);

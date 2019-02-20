@@ -6,13 +6,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.SurfaceView;
-import android.view.TextureView;
+import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -28,11 +28,11 @@ import com.vhall.opensdk.R;
 import com.vhall.ops.VHOPS;
 import com.vhall.player.Constants;
 import com.vhall.player.VHPlayerListener;
+import com.vhall.player.vod.VodPlayerView;
 import com.vhall.vod.VHVodPlayer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -44,7 +44,7 @@ public class VodPlayerActivity extends Activity {
     private static final String TAG = "LivePlayerActivity";
     private String recordId = "";
     private String accessToken = "";
-    private SurfaceView mSurfaceView;
+    private VodPlayerView mSurfaceView;
     private VHVodPlayer mPlayer;
     private boolean mPlaying = false;
     ImageView mPlayBtn, ivAboutSpeed;
@@ -59,6 +59,10 @@ public class VodPlayerActivity extends Activity {
     DocumentView mDocView;
     private boolean isInit = false;
     private RadioGroup speedGroup;
+    private ImageView ivScreenShot;
+    private CheckBox seekBox;
+    private ImageView ivImageShow;
+    private RadioGroup markGravityGroup;
 
     private Handler handler = new Handler() {
         @Override
@@ -101,6 +105,20 @@ public class VodPlayerActivity extends Activity {
         mMaxView = this.findViewById(R.id.tv_max);
         speedGroup = findViewById(R.id.rg_speed);
         ivAboutSpeed = findViewById(R.id.iv_about_speed);
+        ivScreenShot = findViewById(R.id.iv_screen_shot);
+        seekBox = findViewById(R.id.switch_free_seek);
+        ivImageShow = findViewById(R.id.iv_screen_show);
+        markGravityGroup = findViewById(R.id.rg_water_mark_gravity);
+
+
+        seekBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (mPlayer != null) {
+                    mPlayer.setFreeSeekAble(isChecked);
+                }
+            }
+        });
 
         speedGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -139,6 +157,49 @@ public class VodPlayerActivity extends Activity {
         mSeekbar.setOnSeekBarChangeListener(new MySeekbarListener());
         mSeekbar.setEnabled(false);
         mDPIGroup.setOnCheckedChangeListener(new OnCheckedChange());
+
+        markGravityGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (mSurfaceView != null) {
+                    switch (checkedId) {
+                        case R.id.rb_water_mark_c:
+                            mSurfaceView.setWaterMarkGravity(Gravity.CENTER);
+                            break;
+                        case R.id.rb_water_mark_t:
+                            mSurfaceView.setWaterMarkGravity(Gravity.TOP);
+                            break;
+                        case R.id.rb_water_mark_b:
+                            mSurfaceView.setWaterMarkGravity(Gravity.BOTTOM);
+                            break;
+                    }
+
+                }
+            }
+        });
+
+//        mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+//            @Override
+//            public void surfaceCreated(SurfaceHolder holder) {
+//                if (mPlayer != null && mPlayer.resumeAble()) {
+//                    mPlayer.setBackground(false);
+//                    mPlayer.resume();
+//                }
+//            }
+//
+//            @Override
+//            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+//            }
+//
+//            @Override
+//            public void surfaceDestroyed(SurfaceHolder holder) {
+//                if (mPlayer != null) {
+//                    mPlayer.pause();
+//                    mPlayer.setBackground(true);
+//                }
+//
+//            }
+//        });
     }
 
 
@@ -158,6 +219,17 @@ public class VodPlayerActivity extends Activity {
             speedGroup.startAnimation(animation);
             ivAboutSpeed.setImageResource(R.drawable.ic_chevron_right_white_24dp);
         }
+    }
+
+    public void screenShot(View view) {
+        if (mSurfaceView != null && mPlayer != null) {
+            ivImageShow.setImageBitmap(mSurfaceView.getBitmap());
+            ivImageShow.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void dismissScreenShow(View view) {
+        view.setVisibility(View.GONE);
     }
 
     private class OnCheckedChange implements RadioGroup.OnCheckedChangeListener {
@@ -193,7 +265,6 @@ public class VodPlayerActivity extends Activity {
                     mPlayer.resume();
                 } else {
                     mPlayer.start();
-
                 }
             }
         }

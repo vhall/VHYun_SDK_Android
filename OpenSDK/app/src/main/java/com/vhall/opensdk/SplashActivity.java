@@ -35,7 +35,7 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.splash_layout);
         mEditAppid = this.findViewById(R.id.et_appid);
         mEditUserid = this.findViewById(R.id.et_userid);
-        mEditAppid.setText("b6d6f21a");//d317f559 ceefadb5 b6d6f21a
+        mEditAppid.setText("a3214366");//d317f559 ceefadb5 b6d6f21a
         mEditUserid.setText(String.valueOf(System.currentTimeMillis()));
         getPermission();
 

@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -309,12 +308,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         public void onDidUnPublishStream(Room room, Stream stream) {//下麦
             Log.i(TAG, "onDidUnPublishStream");
             isOnline = false;
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    setSpeakerphoneOn(true);
-                }
-            });
+
         }
 
         @Override
@@ -467,7 +461,6 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                setSpeakerphoneOn(true);
                 if (changeSteam(stream))
                     return;
                 int height = mLayoutGroup.getHeight();
@@ -585,6 +578,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     public void onDestroy() {
         if (mDialog != null && mDialog.isShowing())
             mDialog.dismiss();
+        interactive.leaveRoom();
         interactive.release();
         super.onDestroy();
     }
@@ -762,17 +756,4 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         }
         return name;
     }
-
-    AudioManager audioManager;
-
-    //切换到杨声器播放
-    private void setSpeakerphoneOn(boolean on) {
-        if (audioManager == null) {
-            audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-        }
-        audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-        audioManager.setSpeakerphoneOn(on);           //默认为扬声器播放
-    }
-
-
 }
