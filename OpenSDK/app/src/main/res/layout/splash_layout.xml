@@ -9,19 +9,17 @@
         android:id="@+id/et_appid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="5dp"
         android:hint="appid"
-        />
+        android:padding="5dp" />
 
     <EditText
         android:id="@+id/et_userid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="5dp"
-        android:text="1545806653070"
         android:hint="用户id"
-        />
-
+        android:padding="5dp"
+        android:text="1545806653070" />
+    
 
     <TextView
         android:layout_width="match_parent"
@@ -29,6 +27,7 @@
         android:padding="5dp"
         android:text="包名:"
         android:textSize="15dp" />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -64,7 +63,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="50dp"
         android:onClick="enter"
-        android:text="进入"
-        />
+        android:text="进入" />
 
 </LinearLayout>

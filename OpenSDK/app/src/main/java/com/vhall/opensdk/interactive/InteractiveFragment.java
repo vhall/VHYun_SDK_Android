@@ -5,12 +5,15 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -21,18 +24,20 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.vhall.ilss.VHInteractive;
 import com.vhall.opensdk.ConfigActivity;
 import com.vhall.opensdk.R;
+import com.vhall.opensdk.util.CameraUtil;
+import com.vhall.opensdk.util.ListUtil;
 import com.vhall.vhallrtc.client.Room;
 import com.vhall.vhallrtc.client.Stream;
 import com.vhall.vhallrtc.client.VHRenderView;
+import com.vhall.vhallrtc.client.VHTool;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,35 +48,73 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
+import static com.vhall.opensdk.ConfigActivity.KEY_PIX_TYPE;
+
 public class InteractiveFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "InteractiveFragment";
     Context mContext;
-    HorizontalScrollView hsv_streams;
-    LinearLayout mLayoutGroup;//远程流渲染view存放地
+    RecyclerView mStreamContainer;//远程流渲染view容器
+    LinearLayoutManager mLayoutManager;
+    StreamAdapter mAdapter;//容器Adapter
+
     VHRenderView localView;//本地流渲染view
-    Stream localStream;
-    Button mReqBtn, mJoinBtn, mQuitBtn, mMemberBtn;
+    Stream localStream;//本地流
+    Button mReqBtn, mJoinBtn, mQuitBtn, mMemberBtn;//操作隐藏，demo默认进入直接上麦
     AlertDialog mDialog;
+    //功能按钮
     ImageView mSwitchCameraBtn, mInfoBtn;
     CheckBox mBroadcastTB, mVideoTB, mAudioTB, mDualTB;
     TextView mOnlineTV;
 
-    Handler mHandler = new Handler();
     public String mRoomId;
     public String mAccessToken;
     VHInteractive interactive = null;
     boolean isEnable = false;//是否可用
     boolean isOnline = false;//是否上麦
+    String mRoomAttr = "roomAttr";
     String mBroadcastid = "";
     int mDefinition = 0;
     MemberPopu mMemberPopu;
     ActionPopu mActionPopu;
-    InfoPopu mInfoPopu;
+    StreamInfoPopu streamPop;
+    Stream tempLocal;
+    Room interactiveRoom;
+    int changePosition = -1;
+    Handler mHandler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch (msg.what) {
+                case 0:
+                    List<Stream> streams = (List<Stream>) msg.obj;
+                    for (Stream stream : streams) {
+                        try {
+                            //订阅大小流设置 0 小流 1 大流 默认小流
+                            stream.streamOption.put(Stream.kDualKey, 0);
+                            //禁流设置 不设置，默认订阅音视频
+                            //禁用视频，仅订阅音频
+                            stream.muteStream.put(Stream.kStreamOptionVideo, true);
+                            //禁用音频，仅订阅视频
+//                            stream.muteStream.put(Stream.kStreamOptionAudio, true);
+                            interactiveRoom.subscribe(stream); //订阅房间内的其他流
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    break;
+            }
+            return false;
+        }
+    });
+
+    SharedPreferences sp;
+
+    CopyOnWriteArrayList<Stream> mStreams = new CopyOnWriteArrayList<>();
 
     public static InteractiveFragment getInstance(String roomid, String accessToken) {
         InteractiveFragment fragment = new InteractiveFragment();
@@ -103,18 +146,59 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         super.onActivityCreated(savedInstanceState);
         initView();
         //取配置
-        SharedPreferences sp = mContext.getSharedPreferences("config", Context.MODE_PRIVATE);
+        sp = mContext.getSharedPreferences("config", Context.MODE_PRIVATE);
         mBroadcastid = sp.getString(ConfigActivity.KEY_BROCASTID, "");
-        mDefinition = sp.getInt(ConfigActivity.KEY_PIX_TYPE, 0);
+        mDefinition = sp.getInt(KEY_PIX_TYPE, 0);
         interactive = new VHInteractive(mContext, new RoomListener());
         interactive.setOnMessageListener(new MyMessageListener());
+//        VHTool.enableDebugLog(true);
         initLocalView();
         initLocalStream();
+        mAdapter = new StreamAdapter();
+        mLayoutManager = new LinearLayoutManager(mContext);
+        mLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        mStreamContainer.setLayoutManager(mLayoutManager);
+        mStreamContainer.setAdapter(mAdapter);
+        mStreamContainer.setItemViewCacheSize(16);//最多16路
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!isEnable) {
+            initInteractive();
+        } else if (!isOnline) {
+            interactive.setListener(new RoomListener());
+            interactive.enterRoom(mRoomAttr);
+            localView.setStream(localStream);
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        //离开房间，清空stream列表
+        leaveRoom();
+        interactive.setListener(null);
+        isOnline = false;
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mDialog != null && mDialog.isShowing())
+            mDialog.dismiss();
+        interactive.release();
+        super.onDestroy();
+    }
+
+
+    private void initInteractive() {
         interactive.init(mRoomId, mAccessToken, new VHInteractive.InitCallback() {
             @Override
             public void onSuccess() {
                 isEnable = true;
-                ClickEventEnter();
+                interactive.enterRoom(mRoomAttr);//初始化成功，直接进入房间
                 refreshMembers();
             }
 
@@ -126,116 +210,184 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         });
     }
 
+    class RoomListener implements Room.RoomDelegate {
+
+        @Override
+        public void onDidConnect(Room room, JSONObject jsonObject) {//进入房间
+            Log.i(TAG, "onDidConnect");
+            interactiveRoom = room;
+            subscribeStreams(room.getRemoteStreams());
+            join();//进入房间成功，自动上麦
+
+        }
+
+        /**
+         * 受设备硬件及网速原因影响，部分机型一次性加载16路流存在大概率奔溃风险；
+         * 进行延时加载处理，demo单次最多加载5路。单次最多8路，8路以上存在风险不建议使用
+         * @param streams
+         */
+        private void subscribeStreams(List<Stream> streams) {
+            List<List<Stream>> list = ListUtil.sublistAsNum(streams, 5);
+            for (int i = 0; i < list.size(); i++) {
+                Message message = new Message();
+                message.what = 0;
+                message.obj = list.get(i);
+                mHandler.sendMessageDelayed(message, i * 1500);
+            }
+        }
+
+        @Override
+        public void onDidError(Room room, Room.VHRoomErrorStatus vhRoomErrorStatus, String s) {//进入房间失败
+            Log.i(TAG, "onDidError");
+            removeAllStream();
+        }
+
+        @Override
+        public void onDidPublishStream(Room room, Stream stream) {//上麦
+            Log.i(TAG, "onDidPublishStream");
+            isOnline = true;
+        }
+
+        @Override
+        public void onDidUnPublishStream(Room room, Stream stream) {//下麦
+            Log.i(TAG, "onDidUnPublishStream");
+            isOnline = false;
+
+        }
+
+        @Override
+        public void onDidSubscribeStream(Room room, Stream stream) {//订阅其他流
+            Log.i(TAG, "onDidSubscribeStream" + stream.streamId);
+            addStream(stream);
+        }
+
+        @Override
+        public void onDidUnSubscribeStream(Room room, Stream stream) {//取消订阅
+            Log.i(TAG, "onDidUnSubscribeStream");
+            removeStream(stream);
+        }
+
+        @Override
+        public void onDidChangeStatus(Room room, Room.VHRoomStatus vhRoomStatus) {//状态改变
+            Log.i(TAG, "onDidChangeStatus");
+            switch (vhRoomStatus) {
+                case VHRoomStatusDisconnected:// 断开连接
+                    //TODO 销毁页面
+                    removeAllStream();
+                    Log.e(TAG, "VHRoomStatusDisconnected");
+                    break;
+                case VHRoomStatusError:
+                    Log.e(TAG, "VHRoomStatusError");
+                    openErrorDialog();
+                    break;
+                case VHRoomStatusReady:
+                    Log.e(TAG, "VHRoomStatusReady");
+                    break;
+                case VHRoomStatusConnected: // 连接成功
+                    removeAllStream();
+//                    join();// 当房间重连,如果之前已经上麦,则重连后自动上麦
+                    Log.e(TAG, "VHRoomStatusConnected");
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        @Override
+        public void onDidAddStream(Room room, Stream stream) {//有流加入
+            Log.i(TAG, "onDidAddStream");
+            try {
+                stream.streamOption.put(Stream.kDualKey, 0);
+                stream.muteStream.put(Stream.kStreamOptionVideo, true);
+                room.subscribe(stream);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        @Override
+        public void onDidRemoveStream(Room room, Stream stream) {//有流退出
+            Log.i(TAG, "onDidRemoveStream : " + stream.streamId);
+            removeStream(stream);
+        }
+
+        @Override
+        public void onDidUpdateOfStream(Stream stream, JSONObject jsonObject) {//流状态更新
+            Log.i(TAG, "onDidUpdateOfStream");
+        }
+
+        @Override
+        public void onReconnect(int i, int i1) {
+            Log.e(TAG, "onReconnect" + i + " i1 " + i1);
+        }
+
+        @Override
+        public void onStreamMixed(JSONObject jsonObject) {
+
+        }
+    }
+
+
     private void initLocalView() {
         localView.init(null, null);
         localView.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
     }
 
+    //初始化本地流
     private void initLocalStream() {
-        localStream = interactive.createLocalStream(Stream.VhallFrameResolutionValue.VhallFrameResolution320x240.getValue(), "paassdk");
-        localView.setStream(localStream);
-    }
-
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btn_join:
-                clickEventJoin();
-                break;
-            case R.id.btn_quit:
-                clickEventQuit();
-                break;
-            case R.id.btn_request:
-                clickEventReq();
-                break;
-            case R.id.iv_camera:
-                localStream.switchCamera();
-                break;
-            case R.id.btn_members:
-                showMember(true, null);
-                break;
-            case R.id.iv_info:
-                showInfo(true, null);
-                break;
+        int layerType = sp.getInt(KEY_PIX_TYPE, 1);
+        int pixType = 0;
+        JSONObject option = new JSONObject();
+        try {
+            switch (layerType) {
+                case 0:
+                    pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution192x144.getValue();
+                    break;
+                case 1:
+                    pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution320x240.getValue();
+                    break;
+                case 2:
+                    //该分辨率下支持双流
+                    pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution480x360.getValue();
+                    //双流码率设置，单流情况下走默认设置
+                    option.put(Stream.kMinBitrateKbpsKey, 200);
+                    option.put(Stream.kCurrentBitrateKey, 400);
+                    option.put(Stream.kMaxBitrateKey, 600);
+                    break;
+            }
+            option.put(Stream.kFrameResolutionTypeKey, pixType);
+            option.put(Stream.kStreamOptionStreamType, Stream.VhallStreamType.VhallStreamTypeAudioAndVideo.getValue());
+            option.put(Stream.kNumSpatialLayersKey, layerType);//单双流设置 2 双流 其他默认单流
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+        localStream = interactive.createLocalStream(option, "paassdk");
+//        localStream = interactive.createLocalStream(pixType, "paassdk", layerType);
+        localView.setStream(localStream);
+        tempLocal = localStream;
     }
 
-    public void ClickEventEnter() {//进入房间
-        if (!isEnable)
-            return;
-        interactive.enterRoom("userdata");
-    }
 
-    public void clickEventReq() {//申请上麦
-        if (!isEnable)
-            return;
-        interactive.requestPublish(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String result = response.body().string();
-                try {
-                    final JSONObject obj = new JSONObject(result);
-                    int code = obj.optInt("code");
-                    if (code != 200) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(mContext, obj.optString("msg"), Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    public void clickEventJoin() {//上麦
-        if (!isEnable)
-            return;
-        if (isOnline)
-            return;
+    public void join() {//上麦
         if (!interactive.isPushAvailable()) {
-            Toast.makeText(mContext, "无上麦权限", Toast.LENGTH_SHORT).show();
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mContext, "无上麦权限", Toast.LENGTH_SHORT).show();
+                }
+            });
             return;
         }
         interactive.publish();
-        localStream.startStats(new Stream.StatsCallback() {
-            @Override
-            public void onResponse(String s, long l, final Map<String, String> map) {
-                if (s.equals("video")) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            map.put("pixtype", getPixName(mDefinition));
-                            showInfo(false, map);
-                        }
-                    });
-
-                }
-            }
-        });
     }
 
-    public void clickEventQuit() {//下麦
-        if (!isEnable)
-            return;
-        if (isOnline)
-            interactive.unpublish();
-    }
-
-    public void clickEventLeave() {//离开互动房间
-        if (!isEnable)
-            return;
+    private void leaveRoom() {
+        mStreams.clear();
+        mAdapter.notifyDataSetChanged();
         interactive.leaveRoom();
     }
+
 
     public void refreshMembers() {
         interactive.getMembers(new Callback() {
@@ -279,113 +431,19 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         });
     }
 
-    class RoomListener implements Room.RoomDelegate {
-
-        @Override
-        public void onDidConnect(Room room, JSONObject jsonObject) {//进入房间
-            Log.i(TAG, "onDidConnect");
-            //订阅房间内的其他流
-            for (Stream stream : room.getRemoteStreams()) {
-                room.subscribe(stream);
-            }
-        }
-
-        @Override
-        public void onDidError(Room room, Room.VHRoomErrorStatus vhRoomErrorStatus, String s) {//进入房间失败
-            Log.i(TAG, "onDidError");
-            for (Stream stream : room.getRemoteStreams()) {
-                removeStream(stream);
-            }
-        }
-
-        @Override
-        public void onDidPublishStream(Room room, Stream stream) {//上麦
-            Log.i(TAG, "onDidPublishStream");
-            isOnline = true;
-        }
-
-        @Override
-        public void onDidUnPublishStream(Room room, Stream stream) {//下麦
-            Log.i(TAG, "onDidUnPublishStream");
-            isOnline = false;
-
-        }
-
-        @Override
-        public void onDidSubscribeStream(Room room, Stream stream) {//订阅其他流
-            Log.e(TAG, "onDidSubscribeStream" + stream.streamId);
-            addStream(stream);
-        }
-
-        @Override
-        public void onDidUnSubscribeStream(Room room, Stream stream) {//取消订阅
-            Log.i(TAG, "onDidUnSubscribeStream");
-            removeStream(stream);
-        }
-
-        @Override
-        public void onDidChangeStatus(Room room, Room.VHRoomStatus vhRoomStatus) {//状态改变
-            switch (vhRoomStatus) {
-                case VHRoomStatusDisconnected:// 异常退出
-                    //TODO 销毁页面
-                    Log.e(TAG, "VHRoomStatusDisconnected");
-                    break;
-                case VHRoomStatusError:
-                    Log.e(TAG, "VHRoomStatusError");
-                    openErrorDialog();
-                    break;
-                case VHRoomStatusReady:
-                    Log.e(TAG, "VHRoomStatusReady");
-                    break;
-                case VHRoomStatusConnected: // 重连进房间
-                    removeAllStream();
-                    if (isOnline) { // 当房间重连,如果之前已经上麦,则重连后自动上麦,如果之前没有上麦,则点击按钮上麦
-                        isOnline = false;
-                        clickEventJoin();
-                    }
-                    Log.e(TAG, "VHRoomStatusConnected");
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        @Override
-        public void onDidAddStream(Room room, Stream stream) {//有流加入
-            Log.i(TAG, "onDidAddStream");
-            room.subscribe(stream);
-        }
-
-        @Override
-        public void onDidRemoveStream(Room room, Stream stream) {//有流退出
-            Log.e(TAG, "onDidRemoveStream : " + stream.streamId);
-            removeStream(stream);
-        }
-
-        @Override
-        public void onDidUpdateOfStream(Stream stream, JSONObject jsonObject) {//流状态更新
-            Log.i(TAG, "onDidUpdateOfStream");
-
-        }
-
-        @Override
-        public void onReconnect(int i, int i1) {
-            Log.e(TAG, "onReconnect" + i + " i1 " + i1);
-        }
-
-        @Override
-        public void onStreamMixed(JSONObject jsonObject) {
-
-        }
-    }
 
     private void openErrorDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        builder.setTitle("已离开互动房间");
-        builder.setPositiveButton("OK", (dialog, which) -> {
-            getActivity().finish();//结束App
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                builder.setTitle("已离开互动房间");
+                builder.setPositiveButton("OK", (dialog, which) -> {
+                    getActivity().finish();//结束App
+                });
+                builder.show();
+            }
         });
-        builder.show();
     }
 
     class MyMessageListener implements VHInteractive.OnMessageListener {
@@ -461,55 +519,21 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (changeSteam(stream))
+                if (mStreams.contains(stream))
                     return;
-                int height = mLayoutGroup.getHeight();
-                int ori = getActivity().getRequestedOrientation();
-                Log.i(TAG, "ori:" + ori);
-                int width = 0;
-                if (getActivity().getRequestedOrientation() == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                    width = 3 * height / 2;
-                } else {
-                    width = (2 * height) / 3;
-                }
-                View view = View.inflate(mContext, R.layout.item_remote_stream, null);
-                VHRenderView renderView = view.findViewById(R.id.renderview);
-                CheckBox videoBtn = view.findViewById(R.id.cb_video);
-                CheckBox audioBtn = view.findViewById(R.id.cb_audio);
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.MATCH_PARENT);
-                view.setLayoutParams(params);
-                renderView.init(null, null);
-                renderView.setStream(stream);
-                view.setTag(stream);
-                videoBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if (isChecked)//关闭视频开
-                            stream.muteVideo(null);
-                        else//关闭视频关
-                            stream.unmuteVideo(null);
-                    }
-                });
-                audioBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if (isChecked)
-                            stream.muteAudio(null);
-                        else//关闭视频关
-                            stream.unmuteAudio(null);
-                    }
-                });
-                mLayoutGroup.addView(view);
+                mStreams.add(stream);
+                mAdapter.notifyItemInserted(mStreams.size() - 1);
+//                mAdapter.notifyDataSetChanged();
             }
         });
     }
 
-    public boolean changeSteam(Stream stream) {
+    public boolean changeStream(Stream stream) {
         if (stream == null)
             return true;
         boolean added = false;
-        for (int i = 0; i < mLayoutGroup.getChildCount(); i++) {
-            View v = mLayoutGroup.getChildAt(i);
+        for (int i = 0; i < mStreamContainer.getChildCount(); i++) {
+            View v = mStreamContainer.getChildAt(i);
             Stream item = (Stream) v.getTag();
             if (item != null && item.streamId == stream.streamId) {
                 VHRenderView renderView = v.findViewById(R.id.renderview);
@@ -527,14 +551,14 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             public void run() {
                 if (stream == null)
                     return;
-                int childCount = mLayoutGroup.getChildCount();
-                for (int i = 0; i < childCount; i++) {
-                    View view = mLayoutGroup.getChildAt(i);
-                    if ((view.getTag()) == stream) {
-                        mLayoutGroup.removeView(view);
+                for (int i = 0; i < mStreams.size(); i++) {
+                    if (mStreams.get(i).streamId == stream.streamId) {
+                        mStreams.remove(stream);
+                        mAdapter.notifyItemRemoved(i);
                         break;
                     }
                 }
+
             }
         });
 
@@ -544,48 +568,16 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                int childCount = mLayoutGroup.getChildCount();
-                if (childCount > 0) {
-                    mLayoutGroup.removeAllViews();
-                }
+                mStreams.clear();
+                mAdapter.notifyDataSetChanged();
             }
         });
 
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        clickEventQuit();
-    }
-
-    @Override
-    public void onDestroy() {
-        if (mDialog != null && mDialog.isShowing())
-            mDialog.dismiss();
-        interactive.leaveRoom();
-        interactive.release();
-        super.onDestroy();
-    }
-
 
     private void initView() {
-        mLayoutGroup = getView().findViewById(R.id.ll_streams);
+        mStreamContainer = getView().findViewById(R.id.ll_streams);
         localView = getView().findViewById(R.id.localView);
         mJoinBtn = getView().findViewById(R.id.btn_join);
         mQuitBtn = getView().findViewById(R.id.btn_quit);
@@ -594,7 +586,6 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mVideoTB = getView().findViewById(R.id.tb_video);
         mAudioTB = getView().findViewById(R.id.tb_audio);
         mDualTB = getView().findViewById(R.id.tb_dual);
-        hsv_streams = getView().findViewById(R.id.hsv_streams);
         mSwitchCameraBtn = getView().findViewById(R.id.iv_camera);
         mMemberBtn = getView().findViewById(R.id.btn_members);
         mInfoBtn = getView().findViewById(R.id.iv_info);
@@ -608,7 +599,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mDualTB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                localStream.changeVoiceType(isChecked ? 1 : 0);
+                tempLocal.changeVoiceType(isChecked ? 1 : 0);
             }
         });
         mBroadcastTB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -698,12 +689,6 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        mLayoutGroup.invalidate();
-    }
-
     private void showMember(boolean show, List<Member> data) {
         if (mMemberPopu == null) {
             mMemberPopu = new MemberPopu(mContext);
@@ -718,16 +703,6 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             mMemberPopu.refreshData(data);
         if (show)
             mMemberPopu.showAtLocation(getActivity().getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
-    }
-
-    private void showInfo(boolean show, Map<String, String> map) {
-        if (mInfoPopu == null) {
-            mInfoPopu = new InfoPopu(mContext, mRoomId, "管理员");
-        }
-        if (map != null)
-            mInfoPopu.refreshData(map);
-        if (show)
-            mInfoPopu.showAtLocation(getActivity().getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
     }
 
     private void showAction(Member member) {
@@ -756,4 +731,220 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         }
         return name;
     }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btn_join:
+                join();
+                break;
+            case R.id.btn_quit:
+                interactive.unpublish();
+                break;
+            case R.id.btn_request:
+                joinRequest();
+                break;
+            case R.id.iv_camera:
+                localStream.switchCamera();
+                break;
+            case R.id.btn_members:
+                showMember(true, null);
+                break;
+            case R.id.iv_info:
+                if (infoListener != null) {
+                    infoListener.onInfoClick(tempLocal);
+                }
+                break;
+
+        }
+    }
+
+    public void joinRequest() {//申请上麦
+        if (!isEnable)
+            return;
+        interactive.requestPublish(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String result = response.body().string();
+                try {
+                    final JSONObject obj = new JSONObject(result);
+                    int code = obj.optInt("code");
+                    if (code != 200) {
+                        mHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, obj.optString("msg"), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private ItemClickListener itemClickListener = new ItemClickListener() {
+        @Override
+        public void onItemClick(int position) {
+//            Stream stream = mStreams.get(position);
+//            mStreams.remove(position);
+//            if (!tempLocal.isLocal) {
+//                interactive.switchDualStream(tempLocal, 0, null);
+//            }
+//            mStreams.add(position, tempLocal);
+//            mAdapter.notifyItemChanged(position);
+//            changePosition = position;
+//            tempLocal = stream;
+//            localView.setStream(tempLocal);
+//            if (!tempLocal.isLocal) {
+//                interactive.switchDualStream(tempLocal, 1, null);
+//            }
+        }
+    };
+
+    private InfoClickListener infoListener = new InfoClickListener() {
+        @Override
+        public void onInfoClick(Stream stream) {
+            if (streamPop == null) {
+                streamPop = new StreamInfoPopu(getContext());
+            }
+            streamPop.setOnDismissListener(new PopupWindow.OnDismissListener() {
+                @Override
+                public void onDismiss() {
+                    stream.startStats(null);
+
+                }
+            });
+            stream.startStats(new Stream.StatsCallback() {
+                @Override
+                public void onResponse(String s, long l, Map<String, String> map) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            streamPop.refreshData(stream, s, l, map);
+                        }
+                    });
+                }
+            });
+            streamPop.showAtLocation(getView(), Gravity.CENTER, 0, 0);
+        }
+    };
+
+    interface ItemClickListener {
+        void onItemClick(int position);
+    }
+
+    interface InfoClickListener {
+        void onInfoClick(Stream stream);
+    }
+
+    class StreamAdapter extends RecyclerView.Adapter<MyHolder> {
+
+        @NonNull
+        @Override
+        public MyHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            MyHolder holder = new MyHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_remote_stream, parent, false));
+            return holder;
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull MyHolder holder, int position) {
+            Log.e(TAG, "onBindViewHolder:" + position);
+            Stream stream = mStreams.get(position);
+            holder.renderView.setStream(stream);
+            holder.renderView.setTag(stream);
+            holder.tvDescribe.setText(stream.userId);
+            holder.cbVideo.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked)//关闭视频开
+                        stream.muteVideo(null);
+                    else//关闭视频关
+                        stream.unmuteVideo(null);
+                }
+            });
+            holder.cbAudio.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked)
+                        stream.muteAudio(null);
+                    else//关闭视频关
+                        stream.unmuteAudio(null);
+                }
+            });
+
+            holder.ivInfo.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (infoListener != null) {
+                        infoListener.onInfoClick(stream);
+                    }
+                }
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return mStreams.size();
+        }
+
+        @Override
+        public void onViewAttachedToWindow(@NonNull MyHolder holder) {
+            super.onViewAttachedToWindow(holder);
+            Log.e(TAG, "onViewAttachedToWindow");
+            if (holder.getAdapterPosition() != changePosition) {
+                holder.renderView.getStream().unmuteVideo(null);
+            }
+        }
+
+
+        @Override
+        public void onViewDetachedFromWindow(@NonNull MyHolder holder) {
+            super.onViewDetachedFromWindow(holder);
+            Log.e(TAG, "onViewDetachedFromWindow");
+            changePosition = -1;
+            if (holder.renderView.getStream() != tempLocal) {
+                if(!holder.renderView.getStream().isLocal){
+                    holder.renderView.getStream().muteVideo(null);
+                }
+            }
+        }
+    }
+
+
+    class MyHolder extends RecyclerView.ViewHolder {
+
+        VHRenderView renderView;
+        CheckBox cbVideo;
+        CheckBox cbAudio;
+        TextView tvDescribe;
+        ImageView ivInfo;
+
+
+        public MyHolder(View itemView) {
+            super(itemView);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (itemClickListener != null) {
+                        itemClickListener.onItemClick(getAdapterPosition());
+                    }
+                }
+            });
+            renderView = itemView.findViewById(R.id.renderview);
+            renderView.init(null, null);
+            tvDescribe = itemView.findViewById(R.id.tv_speed);
+            ivInfo = itemView.findViewById(R.id.iv_info);
+            cbVideo = itemView.findViewById(R.id.cb_video);
+            cbAudio = itemView.findViewById(R.id.cb_audio);
+        }
+    }
+
+
 }

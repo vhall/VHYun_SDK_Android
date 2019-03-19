@@ -36,7 +36,7 @@ public class SplashActivity extends AppCompatActivity {
         mEditAppid = this.findViewById(R.id.et_appid);
         mEditUserid = this.findViewById(R.id.et_userid);
         mEditAppid.setText("a3214366");//d317f559 ceefadb5 b6d6f21a
-        mEditUserid.setText(String.valueOf(System.currentTimeMillis()));
+        mEditUserid.setText(Build.MODEL);//String.valueOf(System.currentTimeMillis())
         getPermission();
 
     }

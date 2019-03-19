@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:drawable="@drawable/main_button_cameraoff_on" android:state_checked="true"></item>
-    <item android:drawable="@drawable/main_button_cameraoff_off" android:state_checked="false"></item>
+    <item android:drawable="@drawable/main_button_video_off" android:state_checked="true"></item>
+    <item android:drawable="@drawable/main_button_video_on" android:state_checked="false"></item>
 </selector>

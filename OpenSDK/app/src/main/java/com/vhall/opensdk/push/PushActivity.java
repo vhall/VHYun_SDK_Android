@@ -63,11 +63,13 @@ public class PushActivity extends Activity {
         //配置发直播系列参数
         config = new VHLivePushConfig(VHLivePushFormat.PUSH_MODE_HD);
         config.screenOri = VHLivePushFormat.SCREEN_ORI_PORTRAIT;//横竖屏设置 重要
+        //发起流类型设置   STREAM_TYPE_A 音频，STREAM_TYPE_V 视频  STREAM_TYPE_AV 音视频
+        config.streamType = VHLivePushFormat.STREAM_TYPE_AV;
         //初始化音视频采集器
         videoCapture = this.findViewById(R.id.videoCaptureView);
         audioCapture = new VHAudioCapture();
         //初始化直播器
-        pusher = new VHLivePusher(videoCapture, audioCapture, config);
+        pusher = new VHLivePusher(videoCapture, audioCapture, config);//纯音频推流，视频渲染器传null
         pusher.setListener(new MyListener());
     }
 
