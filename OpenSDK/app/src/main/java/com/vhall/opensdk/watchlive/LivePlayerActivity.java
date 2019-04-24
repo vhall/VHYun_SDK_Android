@@ -189,9 +189,6 @@ public class LivePlayerActivity extends Activity {
                 case Constants.Event.EVENT_DOWNLOAD_SPEED:
                     mSpeedTV.setText(msg + "kb/s");
                     break;
-                case Constants.Event.EVENT_STOP_BUFFER:
-                    mLoadingPB.setVisibility(View.GONE);
-                    break;
                 case Constants.Event.EVENT_VIDEO_SIZE_CHANGED:
                     Log.i(TAG, msg);
                     break;

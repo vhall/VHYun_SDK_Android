@@ -163,11 +163,12 @@
                     android:text="涂鸦类型:"
                     android:textColor="@android:color/black" />
 
-                <RadioGroup
+                <com.vhall.opensdk.util.FlowRadioGroup
                     android:id="@+id/rg_types"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:orientation="vertical"
+                    android:padding="0dp" > ！
 
                     <RadioButton
                         android:id="@+id/rb_path"
@@ -192,7 +193,27 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="圆" />
-                </RadioGroup>
+                    <RadioButton
+                        android:id="@+id/rb_isosceles_triangle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="等腰△" />
+                    <RadioButton
+                        android:id="@+id/rb_right_triangle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="直角△" />
+                    <RadioButton
+                        android:id="@+id/rb_single_arrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="箭头" />
+                    <RadioButton
+                        android:id="@+id/rb_double_arrow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="双箭头" />
+                </com.vhall.opensdk.util.FlowRadioGroup>
 
             </LinearLayout>
 

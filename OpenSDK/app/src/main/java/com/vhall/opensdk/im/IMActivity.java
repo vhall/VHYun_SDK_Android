@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -163,6 +164,9 @@ public class IMActivity extends Activity {
     private void requestAvatar(String url, final ImageView view) {
         if (url.startsWith("//")) {
             url = "http:" + url;
+        }
+        if(!Patterns.WEB_URL.matcher(url).matches()){
+            return;
         }
         Request request = new Request.Builder().url(url).build();
         if (mClient == null)

@@ -10,11 +10,15 @@
         android:layout_weight="1"
         android:background="#000000">
 
-        <com.vhall.player.vod.VodPlayerView
+        <!--<com.vhall.player.vod.VodPlayerView
+            android:id="@+id/surfaceview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"/>-->
+        <SurfaceView
             android:id="@+id/surfaceview"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -170,7 +174,15 @@
             android:checked="true"
             android:text="FreeSeek"
             android:textColor="#5fffffff" />
-
+        <TextView
+            android:id="@+id/tv_scale_type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="fitXY"
+            android:textColor="#ffffff"
+            android:padding="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_above="@id/iv_screen_shot"/>
 
 
         <RadioGroup

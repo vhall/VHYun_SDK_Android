@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.Animation;
@@ -44,7 +45,8 @@ public class VodPlayerActivity extends Activity {
     private static final String TAG = "LivePlayerActivity";
     private String recordId = "";
     private String accessToken = "";
-    private VodPlayerView mSurfaceView;
+    //    private VodPlayerView mSurfaceView;
+    private SurfaceView mSurfaceView;
     private VHVodPlayer mPlayer;
     private boolean mPlaying = false;
     ImageView mPlayBtn, ivAboutSpeed;
@@ -63,6 +65,8 @@ public class VodPlayerActivity extends Activity {
     private CheckBox seekBox;
     private ImageView ivImageShow;
     private RadioGroup markGravityGroup;
+    private TextView scaleType;
+    private int curScaleType = Constants.VideoMode.DRAW_MODE_NONE;
 
     private Handler handler = new Handler() {
         @Override
@@ -109,7 +113,23 @@ public class VodPlayerActivity extends Activity {
         seekBox = findViewById(R.id.switch_free_seek);
         ivImageShow = findViewById(R.id.iv_screen_show);
         markGravityGroup = findViewById(R.id.rg_water_mark_gravity);
+        scaleType = findViewById(R.id.tv_scale_type);
 
+        scaleType.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                curScaleType++;
+                int type = curScaleType % 3;
+                mPlayer.setDrawMode(type);
+                if(type ==0){
+                    scaleType.setText("fitXY");
+                }else if(type == 1){
+                    scaleType.setText("fit");
+                }else if(type == 2){
+                    scaleType.setText("fill");
+                }
+            }
+        });
 
         seekBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -164,13 +184,13 @@ public class VodPlayerActivity extends Activity {
                 if (mSurfaceView != null) {
                     switch (checkedId) {
                         case R.id.rb_water_mark_c:
-                            mSurfaceView.setWaterMarkGravity(Gravity.CENTER);
+//                            mSurfaceView.setWaterMarkGravity(Gravity.CENTER);
                             break;
                         case R.id.rb_water_mark_t:
-                            mSurfaceView.setWaterMarkGravity(Gravity.TOP);
+//                            mSurfaceView.setWaterMarkGravity(Gravity.TOP);
                             break;
                         case R.id.rb_water_mark_b:
-                            mSurfaceView.setWaterMarkGravity(Gravity.BOTTOM);
+//                            mSurfaceView.setWaterMarkGravity(Gravity.BOTTOM);
                             break;
                     }
 
@@ -222,10 +242,10 @@ public class VodPlayerActivity extends Activity {
     }
 
     public void screenShot(View view) {
-        if (mSurfaceView != null && mPlayer != null) {
-            ivImageShow.setImageBitmap(mSurfaceView.getBitmap());
-            ivImageShow.setVisibility(View.VISIBLE);
-        }
+//        if (mSurfaceView != null && mPlayer != null) {
+//            ivImageShow.setImageBitmap(mSurfaceView.getBitmap());
+//            ivImageShow.setVisibility(View.VISIBLE);
+//        }
     }
 
     public void dismissScreenShow(View view) {

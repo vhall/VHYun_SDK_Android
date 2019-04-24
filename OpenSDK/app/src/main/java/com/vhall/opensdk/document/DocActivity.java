@@ -108,6 +108,18 @@ public class DocActivity extends Activity {
                     case R.id.rb_circle:
                         mType = IDocument.DrawType.CIRCLE;
                         break;
+                    case R.id.rb_isosceles_triangle:
+                        mType = IDocument.DrawType.ISOSCELES_TRIANGLE;
+                        break;
+                    case R.id.rb_right_triangle:
+                        mType = IDocument.DrawType.RIGHT_TRIANGLE;
+                        break;
+                    case R.id.rb_single_arrow:
+                        mType = IDocument.DrawType.SINGLE_ARROW;
+                        break;
+                    case R.id.rb_double_arrow:
+                        mType = IDocument.DrawType.DOUBLE_ARROW;
+                        break;
                 }
                 mDocView.setDrawType(mType);
             }
