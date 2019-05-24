@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <TextView
+        android:text="文档配置信息：（支持上传的文件类型，最大文件上传限制byte）"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_config"
+        android:background="#f5f5f5"
+        android:padding="5dp"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_from_file"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="从文件上传"
+            android:onClick="fromFile"/>
+
+        <Button
+            android:id="@+id/btn_take_photo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="拍照上传"
+            android:onClick="takePhoto"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_file_path"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="#f5f5f5"
+        android:gravity="center_vertical"
+        android:hint="文件路径"
+        android:minHeight="40dp"
+        android:paddingLeft="10dp" />
+    <EditText
+        android:id="@+id/et_rename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#f5f5f5"
+        android:padding="10dp"
+        android:hint="重命名名称"
+        android:layout_margin="10dp"/>
+
+    <Button
+        android:id="@+id/btn_upload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="开始上传"
+        android:onClick="uploadDocument"/>
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp" />
+
+</LinearLayout>

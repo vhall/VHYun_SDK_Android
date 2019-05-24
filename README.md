@@ -4,6 +4,51 @@
 集成和调用方式，参见官方文档：<http://yun.vhall.com/document/document/index>
 
 ## 版本更新纪录
+### 版本 V1.7.2 更新时间2019.05.24
+1. 看直播播放器，新增添加水印功能；  
+2. 文档模块，新增文档上传功能；
+3. demo新增文档上传demo UploadDocumentActivity;  
+
+#### 使用说明 
+##### 添加水印方式：  
+1. 控制台配置；  
+2. VHVideoPlayerView代码设置（如果使用本地设置，后端配置将失效）：  
+
+```Java
+ 	/**
+     * 设置水印
+     *
+     * @param drawable
+     */
+    public void setWaterMark(Drawable drawable)
+    /**
+     * 设置水印的相对位置
+     *
+     * @param gravity Gravity.LEFT
+     */
+    public void setWaterMarkGravity(int gravity)
+
+```
+##### 文档上传
+文档模块VHOPS新增上传接口：  
+  
+```Java
+    /**
+     * 文档上传
+     * @param filePath 文件路径
+     * @param rename 重命名
+     * @param accessToken
+     * @param callback
+     */
+    public static void upload(String filePath, String rename, String accessToken, final DocCallback callback)
+
+
+    /**
+     * 获取上传文件限制说明
+     * @return
+     */
+    public static String getUploadConfig()
+```
 ### 版本 V1.7.1 更新时间2019.04.26
 1. 更新文档vhallops1.7.1.1.aar包，紧急修复文档加载异常问题；
 

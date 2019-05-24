@@ -47,7 +47,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="5dp"
-        android:text="E7:21:0F:0F:A1:FC:49:0A:6E:3C:83:33:23:D3:3F:86:2A:3F:05"
+        android:text="F4:E7:21:0F:0F:A1:FC:49:0A:6E:3C:83:33:23:D3:3F:86:2A:3F:05"
         android:textColor="@android:color/holo_red_dark"
         android:textSize="15dp" />
 

@@ -61,7 +61,7 @@ public class PushActivity extends Activity {
         mAudioBtn = this.findViewById(R.id.btn_changeAudio);
         mFlashBtn = this.findViewById(R.id.btn_changeFlash);
         //配置发直播系列参数
-        config = new VHLivePushConfig(VHLivePushFormat.PUSH_MODE_HD);
+        config = new VHLivePushConfig(VHLivePushFormat.PUSH_MODE_HD);//Android 仅支持PUSH_MODE_HD(480p)  PUSH_MODE_XXHD(720p)
         config.screenOri = VHLivePushFormat.SCREEN_ORI_PORTRAIT;//横竖屏设置 重要
         //发起流类型设置   STREAM_TYPE_A 音频，STREAM_TYPE_V 视频  STREAM_TYPE_AV 音视频
         config.streamType = VHLivePushFormat.STREAM_TYPE_AV;

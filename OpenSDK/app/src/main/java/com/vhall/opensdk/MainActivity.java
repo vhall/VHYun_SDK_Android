@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.vhall.framework.VhallSDK;
 import com.vhall.opensdk.document.DocActivity;
+import com.vhall.opensdk.document.UploadDocumentActivity;
 import com.vhall.opensdk.im.IMActivity;
 import com.vhall.opensdk.interactive.InteractiveActivity;
 import com.vhall.opensdk.push.PushActivity;
@@ -38,7 +39,7 @@ public class MainActivity extends Activity {
     private static final int REQUEST_PUSH = 0;
     private static final int REQUEST_STORAGE = 1;
     private static final int REQUEST_INTERACTIVE = 2;
-
+    private static final int REQUEST_UPLOAD = 3;
     SharedPreferences sp;
 
 
@@ -86,6 +87,14 @@ public class MainActivity extends Activity {
 
     }
 
+    //需要文件读取权限
+    public void uploadDocument(View view) {
+        if (getUploadPermission()) {
+            Intent intent = new Intent(this, UploadDocumentActivity.class);
+            startAct(intent);
+        }
+    }
+
     public void showDoc(View view) {
         Intent intent = new Intent(this, DocActivity.class);
         startAct(intent);
@@ -115,6 +124,7 @@ public class MainActivity extends Activity {
         return false;
     }
 
+    // 0 vod, 1 upload
     private boolean getStoragePermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return true;
@@ -123,6 +133,17 @@ public class MainActivity extends Activity {
             return true;
         }
         requestPermissions(new String[]{WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE);
+        return false;
+    }
+
+    private boolean getUploadPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+        if (checkSelfPermission(CAMERA) == PackageManager.PERMISSION_GRANTED && checkSelfPermission(WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        requestPermissions(new String[]{CAMERA, WRITE_EXTERNAL_STORAGE}, REQUEST_UPLOAD);
         return false;
     }
 
@@ -144,9 +165,19 @@ public class MainActivity extends Activity {
         } else if (requestCode == REQUEST_STORAGE) {
             Log.i(TAG, grantResults.length + ":" + grantResults[0]);
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Intent intent = new Intent(this, VodPlayerActivity.class);
+                Intent intent;
+                intent = new Intent(this, VodPlayerActivity.class);
+                startAct(intent);
+
+            }
+        } else if (requestCode == REQUEST_UPLOAD) {
+            Log.i(TAG, grantResults.length + ":" + grantResults[0]);
+            if (grantResults.length == 2 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                Log.i(TAG, "get REQUEST_PUSH permission success");
+                Intent intent = new Intent(this, UploadDocumentActivity.class);
                 startAct(intent);
             }
+
         }
     }
 

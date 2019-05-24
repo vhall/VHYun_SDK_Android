@@ -57,6 +57,12 @@
         android:layout_height="wrap_content"
         android:onClick="playvod"
         android:text="看录播" />
+    <Button
+        android:id="@+id/btn_upload_document"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="uploadDocument"
+        android:text="上传文档"/>
 
     <Button
         android:id="@+id/btn_doc"

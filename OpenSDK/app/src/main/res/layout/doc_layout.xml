@@ -30,7 +30,8 @@
             android:id="@+id/opsview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"></com.vhall.document.DocumentView>
+            android:layout_centerInParent="true">
+        </com.vhall.document.DocumentView>
 
         <LinearLayout
             android:layout_width="match_parent"

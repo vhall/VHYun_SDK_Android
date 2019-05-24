@@ -17,7 +17,6 @@ import android.widget.Toast;
 import com.vhall.logmanager.L;
 import com.vhall.lss.play.VHLivePlayer;
 import com.vhall.opensdk.R;
-import com.vhall.opensdk.watchplayback.VodPlayerActivity;
 import com.vhall.player.Constants;
 import com.vhall.player.VHPlayerListener;
 import com.vhall.player.stream.play.IVHVideoPlayer;
@@ -64,8 +63,7 @@ public class LivePlayerActivity extends Activity {
         mLoadingPB = this.findViewById(R.id.pb_loading);
         mSpeedTV = this.findViewById(R.id.tv_speed);
         mDPIGroup.setOnCheckedChangeListener(new OnCheckedChange());
-
-
+        mVideoPlayer.setDrawMode(Constants.VideoMode.DRAW_MODE_ASPECTFIT);
         mPlayer = new VHLivePlayer.Builder()
                 .videoPlayer(mVideoPlayer)
                 .listener(new MyListener())
@@ -220,7 +218,7 @@ public class LivePlayerActivity extends Activity {
                 case Constants.ErrorCode.ERROR_CONNECT:
                     mLoadingPB.setVisibility(View.GONE);
                     mPlayBtn.setImageResource(R.mipmap.icon_start_bro);
-                    Toast.makeText(LivePlayerActivity.this, "Error message:" + msg, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LivePlayerActivity.this, "Error message:error connect " + msg, Toast.LENGTH_SHORT).show();
                     break;
 
             }
