@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,6 +45,8 @@ public class PushActivity extends Activity {
     ImageView mPushBtn;
     ImageView mAudioBtn;
     ImageView mFlashBtn;
+    ImageView mChangeFilterBtn;
+    Switch openNoise;
 
     private String roomId = "";
     private String accessToken = "";
@@ -60,6 +64,8 @@ public class PushActivity extends Activity {
         mPushBtn = this.findViewById(R.id.btn_push);
         mAudioBtn = this.findViewById(R.id.btn_changeAudio);
         mFlashBtn = this.findViewById(R.id.btn_changeFlash);
+        mChangeFilterBtn = this.findViewById(R.id.btn_changeFilter);
+        openNoise = findViewById(R.id.switch_open_noise);
         //配置发直播系列参数
         config = new VHLivePushConfig(VHLivePushFormat.PUSH_MODE_HD);//Android 仅支持PUSH_MODE_HD(480p)  PUSH_MODE_XXHD(720p)
         config.screenOri = VHLivePushFormat.SCREEN_ORI_PORTRAIT;//横竖屏设置 重要
@@ -71,6 +77,14 @@ public class PushActivity extends Activity {
         //初始化直播器
         pusher = new VHLivePusher(videoCapture, audioCapture, config);//纯音频推流，视频渲染器传null
         pusher.setListener(new MyListener());
+
+        openNoise.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                //开始推流后设置生效
+                pusher.openNoiseCancelling(isChecked);
+            }
+        });
     }
 
     @Override

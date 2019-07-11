@@ -45,7 +45,7 @@ public class VodPlayerActivity extends Activity {
     private static final String TAG = "LivePlayerActivity";
     private String recordId = "";
     private String accessToken = "";
-    //    private VodPlayerView mSurfaceView;
+    //        private VodPlayerView mSurfaceView;
     private SurfaceView mSurfaceView;
     private VHVodPlayer mPlayer;
     private boolean mPlaying = false;
@@ -121,11 +121,11 @@ public class VodPlayerActivity extends Activity {
                 curScaleType++;
                 int type = curScaleType % 3;
                 mPlayer.setDrawMode(type);
-                if(type ==0){
+                if (type == 0) {
                     scaleType.setText("fitXY");
-                }else if(type == 1){
+                } else if (type == 1) {
                     scaleType.setText("fit");
-                }else if(type == 2){
+                } else if (type == 2) {
                     scaleType.setText("fill");
                 }
             }
@@ -242,8 +242,9 @@ public class VodPlayerActivity extends Activity {
     }
 
     public void screenShot(View view) {
+        //渲染视图使用VodPlayerView有效
 //        if (mSurfaceView != null && mPlayer != null) {
-//            ivImageShow.setImageBitmap(mSurfaceView.getBitmap());
+//            ivImageShow.setImageBitmap(mSurfaceView.takeVideoScreenshot());
 //            ivImageShow.setVisibility(View.VISIBLE);
 //        }
     }

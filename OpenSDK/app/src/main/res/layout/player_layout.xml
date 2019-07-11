@@ -22,6 +22,7 @@
         android:padding="10dp">
 
         <LinearLayout
+            android:id="@+id/ll_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -41,7 +42,17 @@
                 android:clickable="true"
                 android:onClick="changeMode"
                 android:src="@mipmap/img_danmaku_open" />
+
         </LinearLayout>
+        <ImageView
+            android:id="@+id/btn_screen_shot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:onClick="screenShot"
+            android:layout_margin="5dp"
+            android:layout_below="@id/ll_content"
+            android:src="@mipmap/img_round_camera"/>
 
         <ImageView
             android:id="@+id/btn_play"
@@ -70,5 +81,14 @@
             android:padding="10dp"
             android:textColor="#ffffff" />
     </RelativeLayout>
+    <ImageView
+        android:id="@+id/iv_screen_show"
+        android:layout_width="400dp"
+        android:layout_height="400dp"
+        android:onClick="screenImageOnClick"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone"
+        android:scaleType="fitCenter"/>
 
 </RelativeLayout>

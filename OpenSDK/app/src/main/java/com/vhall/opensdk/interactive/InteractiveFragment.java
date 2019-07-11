@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,17 +31,16 @@ import android.widget.Toast;
 import com.vhall.ilss.VHInteractive;
 import com.vhall.opensdk.ConfigActivity;
 import com.vhall.opensdk.R;
-import com.vhall.opensdk.util.CameraUtil;
 import com.vhall.opensdk.util.ListUtil;
 import com.vhall.vhallrtc.client.Room;
 import com.vhall.vhallrtc.client.Stream;
 import com.vhall.vhallrtc.client.VHRenderView;
-import com.vhall.vhallrtc.client.VHTool;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.RendererCommon;
+import org.webrtc.SurfaceViewRenderer;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -70,7 +68,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     //功能按钮
     ImageView mSwitchCameraBtn, mInfoBtn;
     CheckBox mBroadcastTB, mVideoTB, mAudioTB, mDualTB;
-    TextView mOnlineTV;
+    TextView mOnlineTV, tvScaleType;
 
     public String mRoomId;
     public String mAccessToken;
@@ -86,6 +84,8 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     Stream tempLocal;
     Room interactiveRoom;
     int changePosition = -1;
+    String[] scaleText = {"fit", "fill", "none"};
+    int scaleType = 0;
     Handler mHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
@@ -147,7 +147,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         initView();
         //取配置
         sp = mContext.getSharedPreferences("config", Context.MODE_PRIVATE);
-        mBroadcastid = sp.getString(ConfigActivity.KEY_BROCASTID, "");
+        mBroadcastid = sp.getString(ConfigActivity.KEY_BROADCAST_ID, "");
         mDefinition = sp.getInt(KEY_PIX_TYPE, 0);
         interactive = new VHInteractive(mContext, new RoomListener());
         interactive.setOnMessageListener(new MyMessageListener());
@@ -224,6 +224,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         /**
          * 受设备硬件及网速原因影响，部分机型一次性加载16路流存在大概率奔溃风险；
          * 进行延时加载处理，demo单次最多加载5路。单次最多8路，8路以上存在风险不建议使用
+         *
          * @param streams
          */
         private void subscribeStreams(List<Stream> streams) {
@@ -331,7 +332,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
     private void initLocalView() {
         localView.init(null, null);
-        localView.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FIT);
+        localView.setScalingMode(SurfaceViewRenderer.VHRenderViewScalingMode.kVHRenderViewScalingModeAspectFit);
     }
 
     //初始化本地流
@@ -590,6 +591,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mMemberBtn = getView().findViewById(R.id.btn_members);
         mInfoBtn = getView().findViewById(R.id.iv_info);
         mOnlineTV = getView().findViewById(R.id.tv_online);
+//        tvScaleType = getView().findViewById(R.id.tv_scale_type);
         mJoinBtn.setOnClickListener(this);
         mQuitBtn.setOnClickListener(this);
         mReqBtn.setOnClickListener(this);
@@ -634,6 +636,25 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
             }
         });
+
+        /*tvScaleType.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int type = ++scaleType % 3;
+                tvScaleType.setText(scaleText[type]);
+                switch (type) {
+                    case 0:
+                        localView.setScalingMode(SurfaceViewRenderer.VHRenderViewScalingMode.kVHRenderViewScalingModeAspectFit);
+                        break;
+                    case 1:
+                        localView.setScalingMode(SurfaceViewRenderer.VHRenderViewScalingMode.kVHRenderViewScalingModeAspectFill);
+                        break;
+                    case 2:
+                        localView.setScalingMode(SurfaceViewRenderer.VHRenderViewScalingMode.kVHRenderViewScalingModeNone);
+                        break;
+                }
+            }
+        });*/
     }
 
     /**
@@ -910,7 +931,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             Log.e(TAG, "onViewDetachedFromWindow");
             changePosition = -1;
             if (holder.renderView.getStream() != tempLocal) {
-                if(!holder.renderView.getStream().isLocal){
+                if (!holder.renderView.getStream().isLocal) {
                     holder.renderView.getStream().muteVideo(null);
                 }
             }

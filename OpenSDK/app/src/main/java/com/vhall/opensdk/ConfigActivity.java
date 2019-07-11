@@ -23,33 +23,53 @@ import static android.Manifest.permission.CAMERA;
 
 public class ConfigActivity extends Activity {
 
-    public static final String KEY_BROCASTID = "broid";
+    public static final String KEY_BROADCAST_ID = "broid";
     public static final String KEY_PIX_TYPE = "pix_type";
+    public static final String KEY_LSS_ID = "lss_id";
+    public static final String KEY_VOD_ID = "vod_id";
+    public static final String KEY_CHAT_ID = "chat_id";
+    public static final String KEY_INAV_ID = "inav_id";
+    public static final String KEY_TOKEN = "token";
+    public static final String KEY_DOC_ID ="doc_id";
 
-    EditText et_broid;
+    EditText etBroid, etLss, etVod, etInav, etChat,etDoc,etToken;
     RadioGroup rg;
-    RadioButton rb_sd, rb_hd, rb_uhd;
-    TextView et_pix;
+    RadioButton rbSd, rbHd, rbUhd;
+    TextView etPix;
     SharedPreferences sp;
     Button mBtnSave;
     int i = 0;
-    LinearLayout ll_camera;
+    LinearLayout llCamera;
 
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.config_layout);
-        et_broid = this.findViewById(R.id.et_broid);
+        etBroid = this.findViewById(R.id.et_broid);
         rg = this.findViewById(R.id.rg);
-        et_pix = this.findViewById(R.id.et_pix);
-        rb_sd = this.findViewById(R.id.rb_sd);
-        rb_hd = this.findViewById(R.id.rb_hd);
-        rb_uhd = this.findViewById(R.id.rb_uhd);
+        etPix = this.findViewById(R.id.et_pix);
+        rbSd = this.findViewById(R.id.rb_sd);
+        rbHd = this.findViewById(R.id.rb_hd);
+        rbUhd = this.findViewById(R.id.rb_uhd);
         mBtnSave = this.findViewById(R.id.btn_save);
-        ll_camera = this.findViewById(R.id.ll_camera);
+        llCamera = this.findViewById(R.id.ll_camera);
+        etLss = findViewById(R.id.edt_lss_room_id);
+        etVod = findViewById(R.id.edt_vod_room_id);
+        etInav = findViewById(R.id.edt_inav_room_id);
+        etChat = findViewById(R.id.edt_ch_room_id);
+        etDoc = findViewById(R.id.edt_doc_id);
+        etToken = findViewById(R.id.edt_token);
+
         sp = this.getSharedPreferences("config", MODE_PRIVATE);
-        et_broid.setText(sp.getString(KEY_BROCASTID, ""));
+        etBroid.setText(sp.getString(KEY_BROADCAST_ID, ""));//互动房间开启旁路直播时使用的旁路直播房间id
+        etToken.setText(sp.getString(KEY_TOKEN,""));//token
+        etDoc.setText(sp.getString(KEY_DOC_ID,""));//文档id，演示端设置设置文档时使用
+        etChat.setText(sp.getString(KEY_CHAT_ID,""));//聊天房间id，文档演示时也进入该房间
+        etLss.setText(sp.getString(KEY_LSS_ID,""));//直播房间id
+        etVod.setText(sp.getString(KEY_VOD_ID,""));//点播房间id
+        etInav.setText(sp.getString(KEY_INAV_ID,""));//互动房间id
+
         int pix = sp.getInt(KEY_PIX_TYPE, 0);//0sd 1hd 2uhd
         showParams(pix);
         rg.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -72,8 +92,15 @@ public class ConfigActivity extends Activity {
             @Override
             public void onClick(View v) {
                 SharedPreferences.Editor editor = sp.edit();
-                editor.putString(KEY_BROCASTID, et_broid.getText().toString());
+                editor.putString(KEY_BROADCAST_ID, etBroid.getText().toString());
                 editor.putInt(KEY_PIX_TYPE, i);
+                editor.putString(KEY_TOKEN,etToken.getText().toString().trim());
+                editor.putString(KEY_LSS_ID,etLss.getText().toString().trim());
+                editor.putString(KEY_VOD_ID,etVod.getText().toString().trim());
+                editor.putString(KEY_INAV_ID,etInav.getText().toString().trim());
+                editor.putString(KEY_CHAT_ID,etChat.getText().toString().trim());
+                editor.putString(KEY_DOC_ID,etDoc.getText().toString().trim());
+
                 editor.commit();
                 finish();
             }
@@ -85,16 +112,16 @@ public class ConfigActivity extends Activity {
         i = type;
         switch (type) {
             case 0:
-                rb_sd.setChecked(true);
-                et_pix.setText("176*144");
+                rbSd.setChecked(true);
+                etPix.setText("176*144");
                 break;
             case 1:
-                rb_hd.setChecked(true);
-                et_pix.setText("320*240");
+                rbHd.setChecked(true);
+                etPix.setText("320*240");
                 break;
             case 2:
-                rb_uhd.setChecked(true);
-                et_pix.setText("480*360");
+                rbUhd.setChecked(true);
+                etPix.setText("480*360");
                 break;
         }
     }
@@ -116,11 +143,11 @@ public class ConfigActivity extends Activity {
         int count = Camera.getNumberOfCameras();
         TextView tvNo = new TextView(this);
         tvNo.setText("摄像头数：" + count);
-        ll_camera.addView(tvNo);
+        llCamera.addView(tvNo);
         for (int cameraId = 0; cameraId < Camera.getNumberOfCameras(); cameraId++) {
             TextView tvCamera = new TextView(this);
             StringBuilder text = new StringBuilder();
-            text.append("cammera" + cameraId + ":");
+            text.append("camera" + cameraId + ":");
             Camera.getCameraInfo(cameraId, cameraInfo);
             Camera camera = Camera.open(cameraId);
             Camera.Parameters params = camera.getParameters();
@@ -131,7 +158,7 @@ public class ConfigActivity extends Activity {
                 text.append("[").append(s.width).append(",").append(s.height).append("],");
             }
             tvCamera.setText(text.toString());
-            ll_camera.addView(tvCamera);
+            llCamera.addView(tvCamera);
             camera.release();
         }
     }

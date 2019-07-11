@@ -19,7 +19,6 @@
         android:hint="用户id"
         android:padding="5dp"
         android:text="1545806653070" />
-    
 
     <TextView
         android:layout_width="match_parent"

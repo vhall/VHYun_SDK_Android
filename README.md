@@ -4,6 +4,14 @@
 集成和调用方式，参见官方文档：<http://yun.vhall.com/document/document/index>
 
 ## 版本更新纪录
+### 版本 V1.8.0 更新时间2019.07.11
+1. 新增录屏直播功能；
+2. 发直播demo新增噪声消除开关；
+3. 看直播播放器新增截图功能；
+4. 聊天服务功能升级；
+5. 文档模块新增是否展示上次文档功能(new VHOPS(channelId,roomId,token,loadLastDoc)):
+6. 完善互动本地流渲染模式设置方式（localView.setScalingMode()）；
+
 ### 版本 V1.7.2 更新时间2019.05.24
 1. 看直播播放器，新增添加水印功能；  
 2. 文档模块，新增文档上传功能；

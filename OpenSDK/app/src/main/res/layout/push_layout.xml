@@ -36,7 +36,7 @@
                 android:clickable="true"
                 android:onClick="changeFilter"
                 android:src="@mipmap/img_beautify"
-                android:visibility="gone" />
+                android:visibility="visible" />
 
             <ImageView
                 android:id="@+id/btn_changeCamera"
@@ -64,7 +64,11 @@
                 android:clickable="true"
                 android:onClick="changeMode"
                 android:src="@mipmap/img_danmaku_open" />
-
+            <Switch
+                android:id="@+id/switch_open_noise"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="降噪"/>
         </LinearLayout>
 
         <TextView

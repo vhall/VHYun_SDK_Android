@@ -22,14 +22,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vhall.framework.VHAPI;
-import com.vhall.framework.VhallSDK;
 import com.vhall.opensdk.R;
 import com.vhall.ops.VHOPS;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 /**
  * Created by zwp on 2019/4/25
@@ -87,7 +83,7 @@ public class UploadDocumentActivity extends Activity {
     }
 
     public void uploadDocument(View view) {
-        VHOPS.upload(tvPath.getText().toString().trim(), etReName.getText().toString().trim(), mAccessToken, new VHOPS.DocCallback() {
+        VHOPS.upload(tvPath.getText().toString().trim(), etReName.getText().toString().trim(), mAccessToken, new VHOPS.DocUploadCallback() {
             @Override
             public void onSuccess(String documentId) {
                 tvPath.setText(documentId);

@@ -20,6 +20,7 @@ import com.vhall.framework.connect.VhallConnectService;
 import com.vhall.ims.VHIM;
 import com.vhall.message.ConnectServer;
 import com.vhall.opensdk.R;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -59,7 +60,7 @@ public class IMActivity extends Activity {
         im.setOnConnectChangedListener(new VhallConnectService.OnConnectStateChangedListener() {
             @Override
             public void onStateChanged(ConnectServer.State state, int serverType) {
-                if(serverType==VhallConnectService.SERVER_CHAT){
+                if (serverType == VhallConnectService.SERVER_CHAT) {
                     String text = "";
                     switch (state) {
                         case STATE_CONNECTIONG:
@@ -70,6 +71,7 @@ public class IMActivity extends Activity {
                             break;
                         case STATE_CONNECTED:
                             text = "连接成功！";
+
                             break;
                     }
                     Toast.makeText(IMActivity.this, "网络：" + text, Toast.LENGTH_SHORT).show();
@@ -82,6 +84,7 @@ public class IMActivity extends Activity {
     @Override
     protected void onDestroy() {
         im.leave();
+        im = null;
         super.onDestroy();
     }
 
@@ -110,25 +113,32 @@ public class IMActivity extends Activity {
         @Override
         public void onMessage(String msg) {
             try {
-                JSONObject obj = new JSONObject(msg);
-                JSONObject text = new JSONObject(URLDecoder.decode(obj.optString("text")));
-                String event = text.optString("event");
-                String third_party_user_id = text.optString("third_party_user_id");
-                String nick_name = text.optString("nick_name");
-                String avatar = text.optString("avatar");
+                JSONObject text = new JSONObject(msg);
+                String service_type = text.optString("service_type");//服务类型
+                if (TextUtils.isEmpty(service_type)) return; //
+                String sender_id = text.optString("sender_id");
                 String time = text.optString("date_time");
-                String data = text.optString("data");
-                int onlineNum = text.getInt("user_online_num");
+                String context = text.optString("context");
+                String dataStr = text.optString("data");
+                if (service_type.equals(VhallConnectService.TYPE_CUSTOM)) {//自定义消息处理
+                    addView(service_type, "", dataStr, time, "");
+                } else {
+                    JSONObject data = new JSONObject(dataStr);
+                    JSONObject contextObj = new JSONObject(context);
+                    String nickName = contextObj.optString("nick_name");
+                    if(TextUtils.isEmpty(nickName)){
+                        nickName = sender_id;
+                    }
+                    String avatar = contextObj.optString("avatar");
+                    String textContent = data.optString("text_content");
+                    String type = data.optString("type");
+                    int onlineNum = text.optInt("uv");
 //                Toast.makeText(IMActivity.this, " 当前在线人数 ： " + onlineNum, Toast.LENGTH_SHORT).show();
-                if (TextUtils.isEmpty(event)) return; //
-                if (event.equals(VhallConnectService.TYPE_CUSTOM)) {//收到自定义消息
-                    addView(event, nick_name, data, time, avatar);
-                } else if (event.equals(VhallConnectService.TYPE_CHAT)) { // 聊天消息
-                    addView(event, nick_name, data, time, avatar);
-                } else if (event.equals(VhallConnectService.TYPE_JOIN)) { // 进入消息
-                    addView(event, nick_name, data, time, avatar);
-                } else if (event.equals(VhallConnectService.TYPE_LEAVE)) {// 离开消息
-                    addView(event, nick_name, data, time, avatar);
+                    if (service_type.equals(VhallConnectService.TYPE_ONLINE)) {
+                        addView(type, nickName, textContent, time, avatar);
+                    } else {
+                        addView(service_type, nickName, textContent, time, avatar);
+                    }
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -165,7 +175,7 @@ public class IMActivity extends Activity {
         if (url.startsWith("//")) {
             url = "http:" + url;
         }
-        if(!Patterns.WEB_URL.matcher(url).matches()){
+        if (!Patterns.WEB_URL.matcher(url).matches()) {
             return;
         }
         Request request = new Request.Builder().url(url).build();

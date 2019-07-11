@@ -1,6 +1,7 @@
 package com.vhall.opensdk.document;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -24,6 +25,8 @@ import com.vhall.ops.VHOPS;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import static com.vhall.opensdk.ConfigActivity.KEY_DOC_ID;
+
 /**
  * Created by Hank on 2017/12/18.
  */
@@ -42,6 +45,7 @@ public class DocActivity extends Activity {
     RadioGroup mDoodleTypes;
     EditText et_color, et_size, et_docid;
     TextView mPageView, mStepView;
+    SharedPreferences sp;
 
     private IDocument.DrawAction mAction = IDocument.DrawAction.ADD;
     private IDocument.DrawType mType = IDocument.DrawType.PATH;
@@ -52,10 +56,12 @@ public class DocActivity extends Activity {
         mRoomId = getIntent().getStringExtra("roomid");//纯文档直播可不传
         mChannelId = getIntent().getStringExtra("channelid");
         mAccessToken = getIntent().getStringExtra("token");
+        sp = getSharedPreferences("config", MODE_PRIVATE);
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.doc_layout);
         initView();
-        mDocument = new VHOPS(mChannelId, mRoomId, mAccessToken);
+        mDocument = new VHOPS(mChannelId, mRoomId, mAccessToken,true);//是否展示上次文档，默认true
         mDocument.setDocumentView(mDocView);
         mDocument.join();
     }
@@ -70,6 +76,7 @@ public class DocActivity extends Activity {
         et_color = findViewById(R.id.et_color);
         et_size = findViewById(R.id.et_size);
         et_docid = findViewById(R.id.et_docid);
+        et_docid.setText(sp.getString(KEY_DOC_ID,""));
         mPageView = findViewById(R.id.tv_page);
         mStepView = findViewById(R.id.tv_step);
         mDoodleActions.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -135,9 +142,9 @@ public class DocActivity extends Activity {
             @Override
             public void onEvent(int i, String s) {
                 switch (i) {
-                    case DocumentView.EVENT_PAGE_LOADED:
+                    case DocumentView.EVENT_PAGE_LOADED://界面加载完毕
                         break;
-                    case DocumentView.EVENT_DOC_LOADED:
+                    case DocumentView.EVENT_DOC_LOADED://文档加载完毕
                         Log.i(TAG, "当前文档ID：" + mDocument.getDocId() + " 当前文档opts:" + s);
                         JSONObject optJson = null;
                         try {
@@ -148,7 +155,7 @@ public class DocActivity extends Activity {
                             e.printStackTrace();
                         }
                         break;
-                    case DocumentView.EVENT_DOODLE:
+                    case DocumentView.EVENT_DOODLE://绘制数据回调
                         Log.i(TAG, "object:" + s);
                         JSONObject object = null;
                         try {

@@ -11,7 +11,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.vhall.framework.VhallSDK;
@@ -20,19 +19,24 @@ import com.vhall.opensdk.document.UploadDocumentActivity;
 import com.vhall.opensdk.im.IMActivity;
 import com.vhall.opensdk.interactive.InteractiveActivity;
 import com.vhall.opensdk.push.PushActivity;
+import com.vhall.opensdk.screenRecord.ScreenRecordActivity;
 import com.vhall.opensdk.watchlive.LivePlayerActivity;
 import com.vhall.opensdk.watchplayback.VodPlayerActivity;
 
 import static android.Manifest.permission.CAMERA;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static com.vhall.opensdk.ConfigActivity.KEY_CHAT_ID;
+import static com.vhall.opensdk.ConfigActivity.KEY_INAV_ID;
+import static com.vhall.opensdk.ConfigActivity.KEY_LSS_ID;
+import static com.vhall.opensdk.ConfigActivity.KEY_TOKEN;
+import static com.vhall.opensdk.ConfigActivity.KEY_VOD_ID;
 
 /**
  * Created by Hank on 2017/12/8.
  */
 public class MainActivity extends Activity {
 
-    EditText et_channelid, et_token;
     TextView tv_appid;
     Button mBtnConfig;
     private static final String TAG = "VHLivePusher";
@@ -40,7 +44,10 @@ public class MainActivity extends Activity {
     private static final int REQUEST_STORAGE = 1;
     private static final int REQUEST_INTERACTIVE = 2;
     private static final int REQUEST_UPLOAD = 3;
+    private static final int REQUEST_AUDIO_RECORD = 4;
     SharedPreferences sp;
+    private String token;
+    private String roomid;
 
 
     @Override
@@ -48,12 +55,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_layout);
         sp = getSharedPreferences("config", MODE_PRIVATE);
-        String roomid = sp.getString("key_roomid", "");
-        String token = sp.getString("key_token", "");
-        et_channelid = this.findViewById(R.id.et_channelid);
-        et_token = this.findViewById(R.id.et_token);
-        et_channelid.setText(roomid);
-        et_token.setText(token);
         tv_appid = this.findViewById(R.id.tv_appid);
         mBtnConfig = this.findViewById(R.id.btn_config);
         tv_appid.setText(VhallSDK.getInstance().getAPP_ID());
@@ -68,18 +69,21 @@ public class MainActivity extends Activity {
 
     public void push(View view) {
         if (getPushPermission(REQUEST_PUSH)) {
+            roomid = sp.getString(KEY_LSS_ID,"");
             Intent intent = new Intent(this, PushActivity.class);
             startAct(intent);
         }
     }
 
     public void playlive(View view) {
+        roomid = sp.getString(KEY_LSS_ID,"");
         Intent intent = new Intent(this, LivePlayerActivity.class);
         startAct(intent);
     }
 
     //观看回放需要下载、保存和读取文档信息
     public void playvod(View view) {
+        roomid = sp.getString(KEY_VOD_ID,"");
         if (getStoragePermission()) {
             Intent intent = new Intent(this, VodPlayerActivity.class);
             startAct(intent);
@@ -96,18 +100,29 @@ public class MainActivity extends Activity {
     }
 
     public void showDoc(View view) {
+        roomid = sp.getString(KEY_CHAT_ID,"");
         Intent intent = new Intent(this, DocActivity.class);
         startAct(intent);
     }
 
     public void showIM(View view) {
+        roomid = sp.getString(KEY_CHAT_ID,"");
         Intent intent = new Intent(this, IMActivity.class);
         startAct(intent);
     }
 
     public void showInteractive(View view) {
+        roomid = sp.getString(KEY_INAV_ID,"");
         if (getPushPermission(REQUEST_INTERACTIVE)) {
             Intent intent = new Intent(this, InteractiveActivity.class);
+            startAct(intent);
+        }
+    }
+
+    public void showScreenRecord(View view) {
+        roomid = sp.getString(KEY_LSS_ID,"");
+        if (getAudioRecordPermission()) {
+            Intent intent = new Intent(this, ScreenRecordActivity.class);
             startAct(intent);
         }
     }
@@ -121,6 +136,17 @@ public class MainActivity extends Activity {
             return true;
         }
         requestPermissions(new String[]{CAMERA, RECORD_AUDIO}, requestCode);
+        return false;
+    }
+
+    private boolean getAudioRecordPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+        if (checkSelfPermission(RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        requestPermissions(new String[]{RECORD_AUDIO}, REQUEST_AUDIO_RECORD);
         return false;
     }
 
@@ -178,12 +204,16 @@ public class MainActivity extends Activity {
                 startAct(intent);
             }
 
+        } else if (requestCode == REQUEST_AUDIO_RECORD) {
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Intent intent = new Intent(this, ScreenRecordActivity.class);
+                startAct(intent);
+            }
         }
     }
 
     private void startAct(Intent intent) {
-        String roomid = et_channelid.getText().toString();
-        String token = et_token.getText().toString();
+        token = sp.getString(KEY_TOKEN, "");
         if (TextUtils.isEmpty(roomid) || TextUtils.isEmpty(token))
             return;
         if (roomid.contains(",")) {
@@ -196,9 +226,5 @@ public class MainActivity extends Activity {
             intent.putExtra("token", token);
         }
         startActivity(intent);
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putString("key_roomid", roomid);
-        editor.putString("key_token", token);
-        editor.commit();
     }
 }

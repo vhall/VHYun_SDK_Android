@@ -1,8 +1,10 @@
 package com.vhall.opensdk.watchlive;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -40,13 +42,14 @@ public class LivePlayerActivity extends Activity {
     String currentDPI = "";
     int drawmode = IVHVideoPlayer.DRAW_MODE_NONE;
     //view
-    ImageView mPlayBtn;
+    ImageView mPlayBtn, ivScreen;
     ProgressBar mLoadingPB;
     TextView mSpeedTV;
     //    private DPIPopu popu;
     RadioGroup mDPIGroup;
     //TODO delete
     LinearLayout ll_urls;
+    Handler handler = new Handler();
 
 
     @Override
@@ -54,6 +57,8 @@ public class LivePlayerActivity extends Activity {
         super.onCreate(savedInstanceState);
         roomId = getIntent().getStringExtra("channelid");
         accessToken = getIntent().getStringExtra("token");
+//        roomId = "lss_772f6eda";
+//        accessToken = "vhall";
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.player_layout);
         ll_urls = this.findViewById(R.id.ll_urls);
@@ -62,12 +67,32 @@ public class LivePlayerActivity extends Activity {
         mPlayBtn = this.findViewById(R.id.btn_play);
         mLoadingPB = this.findViewById(R.id.pb_loading);
         mSpeedTV = this.findViewById(R.id.tv_speed);
+        ivScreen = findViewById(R.id.iv_screen_show);
         mDPIGroup.setOnCheckedChangeListener(new OnCheckedChange());
         mVideoPlayer.setDrawMode(Constants.VideoMode.DRAW_MODE_ASPECTFIT);
         mPlayer = new VHLivePlayer.Builder()
                 .videoPlayer(mVideoPlayer)
                 .listener(new MyListener())
                 .build();
+        mPlayer.start(roomId, accessToken);
+    }
+
+    public void screenImageOnClick(View view) {
+        ivScreen.setVisibility(View.GONE);
+
+    }
+
+    public void screenShot(View view) {
+        String dpi = ((RadioButton) mDPIGroup.getChildAt(mDPIGroup.getCheckedRadioButtonId())).getText().toString();
+        if (mPlayer.isPlaying() && !dpi.equals("a")) {//正在播放，且非音频模式截屏；
+            mVideoPlayer.takeVideoScreenshot(new VHVideoPlayerView.ScreenShotCallback() {
+                @Override
+                public void screenBack(Bitmap bitmap) {
+                    ivScreen.setImageBitmap(bitmap);
+                    ivScreen.setVisibility(View.VISIBLE);
+                }
+            });
+        }
     }
 
     private class OnCheckedChange implements RadioGroup.OnCheckedChangeListener {
@@ -99,6 +124,7 @@ public class LivePlayerActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         mPlayer.release();
+
     }
 
     public void play(View view) {

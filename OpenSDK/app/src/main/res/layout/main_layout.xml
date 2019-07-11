@@ -25,18 +25,6 @@
     </RelativeLayout>
 
 
-    <EditText
-        android:id="@+id/et_channelid"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:hint="channelid或recordid或roomid"/>
-
-    <EditText
-        android:id="@+id/et_token"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:hint="token"/>
-
     <Button
         android:id="@+id/btn_push"
         android:layout_width="match_parent"
@@ -85,5 +73,10 @@
         android:onClick="showInteractive"
         android:text="互动直播" />
 
-
+    <Button
+        android:id="@+id/btn_screen_record"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showScreenRecord"
+        android:text="录屏直播" />
 </LinearLayout>
