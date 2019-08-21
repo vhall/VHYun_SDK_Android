@@ -2,8 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 27
-    buildToolsVersion '27.0.3'
-
     defaultConfig {
         applicationId "com.vhall.opensdk"
         minSdkVersion 21
@@ -18,24 +16,9 @@ android {
         }
     }
 
-    signingConfigs {
-        debug {
-            storeFile file("vhall_android_app.keystore")
-            storePassword '123456'
-            keyAlias 'yanting lin'
-            keyPassword '123456'
-        }
-    }
-    
     compileOptions {
         targetCompatibility 1.8
         sourceCompatibility 1.8
-    }
-
-    repositories{
-        flatDir{
-            dirs 'libs'
-        }
     }
 
     lintOptions {
@@ -54,4 +37,5 @@ dependencies {
     api 'com.google.android.exoplayer:exoplayer-core:2.9.1'
     api 'com.google.android.exoplayer:exoplayer-hls:2.9.1'
 
+    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 }

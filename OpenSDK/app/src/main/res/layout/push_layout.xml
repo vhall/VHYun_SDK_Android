@@ -1,102 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-
-    <com.vhall.push.VHVideoCaptureView
-        android:id="@+id/videoCaptureView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="10dp">
+        android:layout_height="0dp"
+        android:layout_weight="2">
 
-        <LinearLayout
+
+        <com.vhall.push.VHVideoCaptureView
+            android:id="@+id/videoCaptureView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent" />
+
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/btn_changeFlash"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:clickable="true"
+                    android:onClick="changeFlash"
+                    android:src="@mipmap/img_round_flash_close" />
+
+                <ImageView
+                    android:id="@+id/btn_changeFilter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:clickable="true"
+                    android:onClick="changeFilter"
+                    android:src="@mipmap/img_beautify"
+                    android:visibility="visible" />
+
+                <ImageView
+                    android:id="@+id/btn_changeCamera"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:clickable="true"
+                    android:onClick="changeCamera"
+                    android:src="@mipmap/img_round_camera" />
+
+                <ImageView
+                    android:id="@+id/btn_changeAudio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:clickable="true"
+                    android:onClick="switchAudio"
+                    android:src="@mipmap/img_round_audio_open" />
+
+                <ImageView
+                    android:id="@+id/btn_changeMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="5dp"
+                    android:clickable="true"
+                    android:onClick="changeMode"
+                    android:src="@mipmap/img_danmaku_open" />
+
+                <Switch
+                    android:id="@+id/switch_open_noise"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="降噪" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_speed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:background="#12000000"
+                android:padding="10dp"
+                android:textColor="#ffffff" />
 
             <ImageView
-                android:id="@+id/btn_changeFlash"
+                android:id="@+id/btn_push"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
                 android:clickable="true"
-                android:onClick="changeFlash"
-                android:src="@mipmap/img_round_flash_close" />
+                android:onClick="push"
+                android:src="@mipmap/icon_start_bro" />
 
-            <ImageView
-                android:id="@+id/btn_changeFilter"
+            <ProgressBar
+                android:id="@+id/pb_loading"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:clickable="true"
-                android:onClick="changeFilter"
-                android:src="@mipmap/img_beautify"
-                android:visibility="visible" />
-
-            <ImageView
-                android:id="@+id/btn_changeCamera"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:clickable="true"
-                android:onClick="changeCamera"
-                android:src="@mipmap/img_round_camera" />
-
-            <ImageView
-                android:id="@+id/btn_changeAudio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:clickable="true"
-                android:onClick="switchAudio"
-                android:src="@mipmap/img_round_audio_open" />
-
-            <ImageView
-                android:id="@+id/btn_changeMode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:clickable="true"
-                android:onClick="changeMode"
-                android:src="@mipmap/img_danmaku_open" />
-            <Switch
-                android:id="@+id/switch_open_noise"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="降噪"/>
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/tv_speed"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:background="#12000000"
-            android:padding="10dp"
-            android:textColor="#ffffff" />
-
-        <ImageView
-            android:id="@+id/btn_push"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:clickable="true"
-            android:onClick="push"
-            android:src="@mipmap/icon_start_bro" />
-
-        <ProgressBar
-            android:id="@+id/pb_loading"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:visibility="gone" />
+                android:layout_centerInParent="true"
+                android:visibility="gone" />
+        </RelativeLayout>
     </RelativeLayout>
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3">
 
-</RelativeLayout>
+        <LinearLayout
+            android:id="@+id/ll_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@+id/et"
+            android:orientation="vertical"/>
+
+        <EditText
+            android:id="@+id/et"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:imeOptions="actionSend"
+            android:inputType="text" />
+    </RelativeLayout>
+
+</LinearLayout>

@@ -10,11 +10,12 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.vhall.document.DocumentView;
 import com.vhall.framework.VhallSDK;
+import com.vhall.framework.utils.SignatureUtil;
 import com.vhall.logmanager.L;
-import com.vhall.logmanager.LogReporter;
 
 import static android.Manifest.permission.READ_PHONE_STATE;
 
@@ -27,6 +28,7 @@ public class SplashActivity extends AppCompatActivity {
     private static final int REQUEST_READ_PHONE_STATE = 0;
     EditText mEditAppid;
     EditText mEditUserid;
+    TextView tvPackageName, tvSignatures;
 
 
     @Override
@@ -35,8 +37,12 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.splash_layout);
         mEditAppid = this.findViewById(R.id.et_appid);
         mEditUserid = this.findViewById(R.id.et_userid);
-        mEditAppid.setText("a3214366");//d317f559 ceefadb5 b6d6f21a
+        mEditAppid.setText("");
         mEditUserid.setText(Build.MODEL);//String.valueOf(System.currentTimeMillis())
+        tvPackageName = findViewById(R.id.tv_package_name);
+        tvPackageName.setText(getPackageName());
+        tvSignatures = findViewById(R.id.tv_signatures);
+        tvSignatures.setText(SignatureUtil.getSignatureSHA1(this));
         getPermission();
 
     }
@@ -65,7 +71,7 @@ public class SplashActivity extends AppCompatActivity {
         String userid = mEditUserid.getText().toString();
 
         if (!TextUtils.isEmpty(appid)) {
-            VhallSDK.getInstance().setLogLevel(L.LogLevel.FULL);
+//            VhallSDK.getInstance().setLogLevel(L.LogLevel.FULL);
 //            VhallSDK.getInstance().nativeLog(true);
             VhallSDK.getInstance().init(getApplicationContext(), appid, userid);//初始化成功会打印日志：初始化成功！，请确保注册的appid与当前应用包名签名一致
             Intent intent = new Intent(SplashActivity.this, MainActivity.class);

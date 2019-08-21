@@ -30,21 +30,28 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="push"
-        android:text="发直播" />
+        android:text="发直播+聊天" />
+
+    <Button
+        android:id="@+id/btn_doc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showDoc"
+        android:text="文档发直播" />
 
     <Button
         android:id="@+id/btn_play_live"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="playlive"
-        android:text="看直播" />
+        android:text="看文档直播" />
 
     <Button
         android:id="@+id/btn_play_vod"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="playvod"
-        android:text="看录播" />
+        android:text="看文档录播" />
     <Button
         android:id="@+id/btn_upload_document"
         android:layout_width="match_parent"
@@ -52,19 +59,13 @@
         android:onClick="uploadDocument"
         android:text="上传文档"/>
 
-    <Button
-        android:id="@+id/btn_doc"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="showDoc"
-        android:text="看文档" />
 
     <Button
         android:id="@+id/btn_im"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="showIM"
-        android:text="聊天" />
+        android:text="聊天+看直播" />
 
     <Button
         android:id="@+id/btn_interactive"
@@ -79,4 +80,5 @@
         android:layout_height="wrap_content"
         android:onClick="showScreenRecord"
         android:text="录屏直播" />
+
 </LinearLayout>

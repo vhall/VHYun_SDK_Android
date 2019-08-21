@@ -5,10 +5,10 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.DisplayMetrics;
-import android.view.Gravity;
+import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
@@ -29,7 +29,6 @@ import com.vhall.opensdk.R;
 import com.vhall.ops.VHOPS;
 import com.vhall.player.Constants;
 import com.vhall.player.VHPlayerListener;
-import com.vhall.player.vod.VodPlayerView;
 import com.vhall.vod.VHVodPlayer;
 
 import org.json.JSONArray;
@@ -66,30 +65,37 @@ public class VodPlayerActivity extends Activity {
     private ImageView ivImageShow;
     private RadioGroup markGravityGroup;
     private TextView scaleType;
+    private RelativeLayout rlContainer;
     private int curScaleType = Constants.VideoMode.DRAW_MODE_NONE;
 
-    private Handler handler = new Handler() {
+
+    private Handler handler = new Handler(new Handler.Callback() {
         @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
+        public boolean handleMessage(Message msg) {
             if (mPlaying) {
                 int pos = (int) mPlayer.getPosition();
                 mSeekbar.setProgress(pos);
                 mPosView.setText(converLongTimeToStr(pos));
+                //文档时间同步
+                if (mDocument != null) {
+                    mDocument.setTime(pos);
+                }
             }
+            return false;
         }
-    };
+    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        recordId = getIntent().getStringExtra("channelid");
+        recordId = getIntent().getStringExtra("channelId");
         accessToken = getIntent().getStringExtra("token");
         setContentView(R.layout.vod_layout);
         initView();
-        mDocument = new VHOPS(recordId, null);
-        mDocument.setDocumentView(mDocView);
+        mDocument = new VHOPS(this, recordId, null);
+//        mDocument.setDocumentView(mDocView);
+        mDocument.setListener(opsCallback);
         mDocument.join();
         mPlayer = new VHVodPlayer(this);
         mPlayer.setDisplay(mSurfaceView);
@@ -97,10 +103,48 @@ public class VodPlayerActivity extends Activity {
         handlePosition();
     }
 
+    private VHOPS.EventListener opsCallback = new VHOPS.EventListener() {
+
+        @Override
+        public void onEvent(String event, String type, String cid) {
+            if (event.equals(VHOPS.KEY_OPERATE)) {
+                if (type.equals(VHOPS.TYPE_ACTIVE)) {
+                    mDocView = mDocument.getActiveView();
+                    rlContainer.removeAllViews();
+                    if (mDocView != null) {
+                        rlContainer.addView(mDocView);
+                        setLayout();
+                    }
+                } else if (type.equals(VHOPS.TYPE_CREATE)) {
+                    //创建文档
+                    Log.e(TAG, "onEvent: create:" + cid);
+
+                } else if (type.equals(VHOPS.TYPE_DESTROY)) {
+                    //删除编号 cid的文档
+                    Log.e(TAG, "onEvent: destroy:" + cid);
+                } else if (type.equals(VHOPS.TYPE_SWITCHOFF)) {
+                    //关闭文档演示
+                    rlContainer.setVisibility(View.GONE);
+                    Log.e(TAG, "onEvent: switchoff:" + cid);
+                } else if (type.equals(VHOPS.TYPE_SWITCHON)) {
+                    //打开文档演示
+                    Log.e(TAG, "onEvent: switchon:" + cid);
+                    rlContainer.setVisibility(View.VISIBLE);
+                }
+            }
+        }
+
+        @Override
+        public void onError(int errorCode, int innerError, String errorMsg) {
+
+        }
+    };
+
+
     private void initView() {
         mDPIGroup = this.findViewById(R.id.rg_dpi);
-        mDocView = this.findViewById(R.id.doc);
-        setLayout();
+//        mDocView = this.findViewById(R.id.doc);
+//        setLayout();
         mPlayBtn = this.findViewById(R.id.btn_play);
         mLoadingPB = this.findViewById(R.id.pb_loading);
         mSeekbar = this.findViewById(R.id.seekbar);
@@ -114,6 +158,8 @@ public class VodPlayerActivity extends Activity {
         ivImageShow = findViewById(R.id.iv_screen_show);
         markGravityGroup = findViewById(R.id.rg_water_mark_gravity);
         scaleType = findViewById(R.id.tv_scale_type);
+
+        rlContainer = findViewById(R.id.doc_container);
 
         scaleType.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -220,6 +266,8 @@ public class VodPlayerActivity extends Activity {
 //
 //            }
 //        });
+
+
     }
 
 
@@ -282,6 +330,7 @@ public class VodPlayerActivity extends Activity {
             } else {
                 if (mPlayer.getState() == Constants.State.END) {
                     mPlayer.seekto(0);
+                    mDocument.seekTo(0);
                 } else if (mPlayer.getState() == Constants.State.STOP) {
                     mPlayer.resume();
                 } else {
@@ -324,6 +373,7 @@ public class VodPlayerActivity extends Activity {
             switch (event) {
                 case Constants.Event.EVENT_INIT_SUCCESS://初始化成功
                     isInit = true;
+                    mDocument.setCue_point(mPlayer.getCurePoint());
                     mPlayer.start();
                     break;
                 case Constants.Event.EVENT_VIDEO_SIZE_CHANGED:
@@ -399,8 +449,10 @@ public class VodPlayerActivity extends Activity {
 
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
-            if (isInit)
+            if (isInit) {
                 mPlayer.seekto(seekBar.getProgress());
+                mDocument.seekTo(seekBar.getProgress());
+            }
         }
 
     }
@@ -430,7 +482,7 @@ public class VodPlayerActivity extends Activity {
             public void run() {
                 handler.sendEmptyMessage(0);
             }
-        }, 1000, 1000);
+        }, 150, 150);
     }
 
     public static String converLongTimeToStr(long time) {
@@ -453,13 +505,8 @@ public class VodPlayerActivity extends Activity {
     }
 
     private void setLayout() {
-        WindowManager manager = getWindowManager();
-        DisplayMetrics metrics = new DisplayMetrics();
-        manager.getDefaultDisplay().getMetrics(metrics);
-        int width = metrics.widthPixels;  //以要素为单位
-        int height = width * 9 / 16;
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mDocView.getLayoutParams();
-        params.width = width;
-        params.height = height;
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        params.addRule(RelativeLayout.CENTER_IN_PARENT);
+        mDocView.setLayoutParams(params);
     }
 }

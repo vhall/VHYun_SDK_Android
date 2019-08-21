@@ -5,27 +5,46 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vhall.document.DocumentView;
 import com.vhall.logmanager.L;
 import com.vhall.lss.play.VHLivePlayer;
 import com.vhall.opensdk.R;
+import com.vhall.opensdk.document.DocActivity;
+import com.vhall.ops.VHOPS;
 import com.vhall.player.Constants;
 import com.vhall.player.VHPlayerListener;
+import com.vhall.player.stream.LivePlayer;
 import com.vhall.player.stream.play.IVHVideoPlayer;
 import com.vhall.player.stream.play.impl.VHVideoPlayerView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
+
+import static com.vhall.ops.VHOPS.ERROR_CONNECT;
+import static com.vhall.ops.VHOPS.ERROR_DOC_INFO;
+import static com.vhall.ops.VHOPS.ERROR_SEND;
+import static com.vhall.ops.VHOPS.KEY_OPERATE;
+import static com.vhall.ops.VHOPS.TYPE_ACTIVE;
+import static com.vhall.ops.VHOPS.TYPE_CREATE;
+import static com.vhall.ops.VHOPS.TYPE_DESTROY;
+import static com.vhall.ops.VHOPS.TYPE_RESET;
+import static com.vhall.ops.VHOPS.TYPE_SWITCHOFF;
+import static com.vhall.ops.VHOPS.TYPE_SWITCHON;
 
 /**
  * Created by Hank on 2017/11/23.
@@ -37,6 +56,7 @@ public class LivePlayerActivity extends Activity {
     VHLivePlayer mPlayer;
     VHVideoPlayerView mVideoPlayer;
     private String roomId = "";
+    private String channelId = "";
     private String accessToken = "";
     //data
     String currentDPI = "";
@@ -50,12 +70,18 @@ public class LivePlayerActivity extends Activity {
     //TODO delete
     LinearLayout ll_urls;
     Handler handler = new Handler();
+    VHOPS mDocument;
+    RelativeLayout rlOpsContainer;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        roomId = getIntent().getStringExtra("channelid");
+        roomId = getIntent().getStringExtra("roomId");
+        channelId = getIntent().getStringExtra("channelId");
+        if (TextUtils.isEmpty(roomId)) {
+            roomId = channelId;
+        }
         accessToken = getIntent().getStringExtra("token");
 //        roomId = "lss_772f6eda";
 //        accessToken = "vhall";
@@ -68,6 +94,7 @@ public class LivePlayerActivity extends Activity {
         mLoadingPB = this.findViewById(R.id.pb_loading);
         mSpeedTV = this.findViewById(R.id.tv_speed);
         ivScreen = findViewById(R.id.iv_screen_show);
+        rlOpsContainer = findViewById(R.id.rl_ops_container);
         mDPIGroup.setOnCheckedChangeListener(new OnCheckedChange());
         mVideoPlayer.setDrawMode(Constants.VideoMode.DRAW_MODE_ASPECTFIT);
         mPlayer = new VHLivePlayer.Builder()
@@ -75,7 +102,64 @@ public class LivePlayerActivity extends Activity {
                 .listener(new MyListener())
                 .build();
         mPlayer.start(roomId, accessToken);
+
+        mDocument = new VHOPS(this, channelId, roomId, accessToken, true);
+        mDocument.setListener(opsListener);
+        mDocument.join();
     }
+
+    private VHOPS.EventListener opsListener = new VHOPS.EventListener() {
+        @Override
+        public void onEvent(String event, String type, String cid) {
+            if (event.equals(KEY_OPERATE)) {
+                if (type.equals(TYPE_RESET)) {
+                    rlOpsContainer.removeAllViews();
+                } else if (type.equals(TYPE_ACTIVE)) {
+                    if (rlOpsContainer != null) {
+                        rlOpsContainer.removeAllViews();
+                        DocumentView mDocView = mDocument.getActiveView();
+                        rlOpsContainer.addView(mDocView);
+                        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+                        mDocView.setLayoutParams(params);
+                    }
+                } else if (type.equals(TYPE_CREATE)) {
+                    //创建文档
+
+                } else if (type.equals(TYPE_DESTROY)) {
+                    //删除编号 cid的文档
+
+                } else if (type.equals(TYPE_SWITCHOFF)) {
+                    //关闭文档演示
+                    rlOpsContainer.setVisibility(View.INVISIBLE);
+                } else if (type.equals(TYPE_SWITCHON)) {
+                    //打开文档演示
+                    rlOpsContainer.setVisibility(View.VISIBLE);
+                }
+            }
+        }
+
+        @Override
+        public void onError(int errorCode, int innerError, String errorMsg) {
+            switch (errorCode) {
+                case ERROR_CONNECT:
+                case ERROR_SEND:
+                    Toast.makeText(LivePlayerActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+                    break;
+                case ERROR_DOC_INFO:
+                    try {
+                        JSONObject obj = new JSONObject(errorMsg);
+                        String msg = obj.optString("msg");
+                        String cid = obj.optString("cid");
+                        Toast.makeText(LivePlayerActivity.this, msg, Toast.LENGTH_SHORT).show();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
 
     public void screenImageOnClick(View view) {
         ivScreen.setVisibility(View.GONE);
@@ -124,6 +208,7 @@ public class LivePlayerActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         mPlayer.release();
+        mDocument.leave();
 
     }
 
@@ -151,6 +236,10 @@ public class LivePlayerActivity extends Activity {
                 case START:
                     mLoadingPB.setVisibility(View.GONE);
                     mPlayBtn.setImageResource(R.mipmap.icon_pause_bro);
+                    if (!TextUtils.isEmpty(channelId) && mDocument != null) {
+                        //设置文档延迟时间，以保证与视频操作同步
+                        mDocument.setDealTime(mPlayer.getRealityBufferTime() + 3000);
+                    }
                     break;
                 case BUFFER:
                     mLoadingPB.setVisibility(View.VISIBLE);
@@ -230,6 +319,9 @@ public class LivePlayerActivity extends Activity {
                     }
                     Toast.makeText(LivePlayerActivity.this, "主播停止推流", Toast.LENGTH_SHORT).show();
                     mPlayer.pause();
+                    break;
+                case Constants.Event.EVENT_NO_STREAM:
+                    Toast.makeText(LivePlayerActivity.this, "主播端暂未推流", Toast.LENGTH_SHORT).show();
                     break;
             }
 

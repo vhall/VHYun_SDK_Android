@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -52,6 +53,7 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
+import static android.content.Context.MEDIA_PROJECTION_SERVICE;
 import static com.vhall.opensdk.ConfigActivity.KEY_PIX_TYPE;
 
 public class InteractiveFragment extends Fragment implements View.OnClickListener {
@@ -64,6 +66,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     VHRenderView localView;//本地流渲染view
     Stream localStream;//本地流
     Button mReqBtn, mJoinBtn, mQuitBtn, mMemberBtn;//操作隐藏，demo默认进入直接上麦
+    Button btnScreen;
     AlertDialog mDialog;
     //功能按钮
     ImageView mSwitchCameraBtn, mInfoBtn;
@@ -86,6 +89,9 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     int changePosition = -1;
     String[] scaleText = {"fit", "fill", "none"};
     int scaleType = 0;
+
+    private MediaProjectionManager mediaProjectionManager = null;
+
     Handler mHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
@@ -160,6 +166,8 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mStreamContainer.setLayoutManager(mLayoutManager);
         mStreamContainer.setAdapter(mAdapter);
         mStreamContainer.setItemViewCacheSize(16);//最多16路
+
+        mediaProjectionManager = (MediaProjectionManager) getActivity().getSystemService(MEDIA_PROJECTION_SERVICE);
 
     }
 
@@ -344,20 +352,22 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             switch (layerType) {
                 case 0:
                     pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution192x144.getValue();
+                    option.put(Stream.kFrameResolutionTypeKey, pixType);
                     break;
                 case 1:
                     pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution320x240.getValue();
+                    option.put(Stream.kFrameResolutionTypeKey, pixType);
                     break;
                 case 2:
                     //该分辨率下支持双流
                     pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution480x360.getValue();
-                    //双流码率设置，单流情况下走默认设置
+                    option.put(Stream.kFrameResolutionTypeKey, pixType);
+                    //重置双流码率，当前分辨率默认码率仅支持单流
                     option.put(Stream.kMinBitrateKbpsKey, 200);
                     option.put(Stream.kCurrentBitrateKey, 400);
                     option.put(Stream.kMaxBitrateKey, 600);
                     break;
             }
-            option.put(Stream.kFrameResolutionTypeKey, pixType);
             option.put(Stream.kStreamOptionStreamType, Stream.VhallStreamType.VhallStreamTypeAudioAndVideo.getValue());
             option.put(Stream.kNumSpatialLayersKey, layerType);//单双流设置 2 双流 其他默认单流
         } catch (JSONException e) {
@@ -591,6 +601,8 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mMemberBtn = getView().findViewById(R.id.btn_members);
         mInfoBtn = getView().findViewById(R.id.iv_info);
         mOnlineTV = getView().findViewById(R.id.tv_online);
+        btnScreen = getView().findViewById(R.id.btn_screen_record);
+        btnScreen.setOnClickListener(this);
 //        tvScaleType = getView().findViewById(R.id.tv_scale_type);
         mJoinBtn.setOnClickListener(this);
         mQuitBtn.setOnClickListener(this);
@@ -636,6 +648,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
             }
         });
+
 
         /*tvScaleType.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -776,7 +789,9 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                     infoListener.onInfoClick(tempLocal);
                 }
                 break;
+            case R.id.btn_screen_record:
 
+                break;
         }
     }
 

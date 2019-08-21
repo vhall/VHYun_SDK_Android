@@ -1,7 +1,6 @@
 package com.vhall.opensdk;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
@@ -62,13 +61,13 @@ public class ConfigActivity extends Activity {
         etToken = findViewById(R.id.edt_token);
 
         sp = this.getSharedPreferences("config", MODE_PRIVATE);
-        etBroid.setText(sp.getString(KEY_BROADCAST_ID, ""));//互动房间开启旁路直播时使用的旁路直播房间id
-        etToken.setText(sp.getString(KEY_TOKEN,""));//token
-        etDoc.setText(sp.getString(KEY_DOC_ID,""));//文档id，演示端设置设置文档时使用
-        etChat.setText(sp.getString(KEY_CHAT_ID,""));//聊天房间id，文档演示时也进入该房间
-        etLss.setText(sp.getString(KEY_LSS_ID,""));//直播房间id
-        etVod.setText(sp.getString(KEY_VOD_ID,""));//点播房间id
-        etInav.setText(sp.getString(KEY_INAV_ID,""));//互动房间id
+        etBroid.setText(sp.getString(KEY_BROADCAST_ID, ""));
+        etToken.setText(sp.getString(KEY_TOKEN,""));
+        etDoc.setText(sp.getString(KEY_DOC_ID,""));
+        etChat.setText(sp.getString(KEY_CHAT_ID,""));
+        etLss.setText(sp.getString(KEY_LSS_ID,""));
+        etVod.setText(sp.getString(KEY_VOD_ID,""));
+        etInav.setText(sp.getString(KEY_INAV_ID,""));
 
         int pix = sp.getInt(KEY_PIX_TYPE, 0);//0sd 1hd 2uhd
         showParams(pix);
@@ -152,7 +151,6 @@ public class ConfigActivity extends Activity {
             Camera camera = Camera.open(cameraId);
             Camera.Parameters params = camera.getParameters();
             List<Camera.Size> size = params.getSupportedPreviewSizes();
-
             for (int i = 0; i < size.size(); i++) {
                 Camera.Size s = size.get(i);
                 text.append("[").append(s.width).append(",").append(s.height).append("],");

@@ -1,37 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
-    <RelativeLayout
+    android:layout_height="match_parent">
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0">
-
-        <Switch
-            android:id="@+id/switch_edit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:checked="false"
-            android:padding="10dp"
-            android:text="文档操作权限 : "
-            android:textOff="关"
-            android:textOn="开" />
-    </RelativeLayout>
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
     <RelativeLayout
+        android:id="@+id/rl_ops_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1.5">
 
-        <com.vhall.document.DocumentView
+        <!--<com.vhall.document.DocumentView
             android:id="@+id/opsview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true">
-        </com.vhall.document.DocumentView>
+        </com.vhall.document.DocumentView>-->
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_item_doc_tab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <RelativeLayout
+            android:id="@+id/ops_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:layout_below="@id/rv_item_doc_tab"/>
+
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -67,7 +66,15 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
-
+            <Switch
+                android:id="@+id/switch_demo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:padding="10dp"
+                android:text=" 文档演示开关： "
+                android:textOff="关"
+                android:textOn="开" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -77,6 +84,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="文档操作:"
+                    android:paddingLeft="10dp"
                     android:textColor="@android:color/black" />
 
                 <LinearLayout
@@ -148,6 +156,33 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="删除" />
+                </RadioGroup>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="新增视图操作："
+                    android:textColor="@android:color/black"/>
+                <RadioGroup
+                    android:id="@+id/rg_adds"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <RadioButton
+                        android:id="@+id/rb_add_doc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="文档"/>
+                    <RadioButton
+                        android:id="@+id/rb_add_board"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="白板"
+                        android:checked="true"/>
                 </RadioGroup>
             </LinearLayout>
 
@@ -259,11 +294,11 @@
                 android:orientation="horizontal">
 
                 <EditText
-                    android:id="@+id/et_docid"
+                    android:id="@+id/et_param"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:hint="文档ID"
+                    android:hint="文档ID/白板背景色"
                     android:textSize="12dp" />
 
                 <Button
@@ -272,7 +307,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="clickEventSetDoc"
-                    android:text="设置文档" />
+                    android:text="设置文档"
+                    android:visibility="gone"/>
             </LinearLayout>
 
             <Button
@@ -283,8 +319,40 @@
                 android:text="清空画笔" />
 
         </LinearLayout>
-
     </ScrollView>
+    </LinearLayout>
+    <RelativeLayout
+        android:id="@+id/rl_video"
+        android:layout_width="120dp"
+        android:layout_height="90dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:clickable="true">
+        <com.vhall.push.VHVideoCaptureView
+            android:id="@+id/video_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="onVideoClick"/>
+<!--        <LinearLayout
+            android:id="@+id/ll_layer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:onClick="onLayerClick"
+            android:orientation="horizontal"/>-->
+        <ImageView
+            android:id="@+id/btn_push"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="gone"
+            android:onClick="push"
+            android:src="@drawable/selector_start_pause" />
+        <ProgressBar
+            android:id="@+id/pb_loading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="gone" />
+    </RelativeLayout>
 
-
-</LinearLayout>
+</RelativeLayout>

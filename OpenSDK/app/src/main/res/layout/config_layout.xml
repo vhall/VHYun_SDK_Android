@@ -112,7 +112,7 @@
                     android:gravity="center_vertical"
                     android:hint="lssRoomId"
                     android:padding="5dp"
-                    android:text="lss_772f6eda" />
+                    android:text="" />
 
 
             </LinearLayout>
@@ -135,7 +135,7 @@
                     android:gravity="center_vertical"
                     android:hint="vodRoomId"
                     android:padding="5dp"
-                    android:text="ac23cf44" />
+                    android:text="" />
             </LinearLayout>
 
             <LinearLayout
@@ -157,7 +157,7 @@
                     android:gravity="center_vertical"
                     android:hint="chRoomId"
                     android:padding="5dp"
-                    android:text="ch_17c990c7" />
+                    android:text="" />
 
 
             </LinearLayout>
@@ -180,7 +180,7 @@
                     android:gravity="center_vertical"
                     android:hint="inavRoomId"
                     android:padding="5dp"
-                    android:text="inav_e301abbf" />
+                    android:text="" />
             </LinearLayout>
 
             <LinearLayout
@@ -200,9 +200,9 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center_vertical"
-                    android:hint="chRoomId"
+                    android:hint="docId"
                     android:padding="5dp"
-                    android:text="43c03b43" />
+                    android:text="" />
             </LinearLayout>
 
             <Button

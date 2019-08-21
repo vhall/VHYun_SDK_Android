@@ -7,7 +7,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Build;
 
-import com.vhall.slss.VHScreenRecordService;
+import com.vhall.lss.push.VHScreenRecordService;
 import com.vhall.opensdk.R;
 
 /**

@@ -1,19 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.vhall.opensdk">
-
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.FLASHLIGHT" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-
-    <uses-feature android:name="android.hardware.camera" />
 
     <application
         android:allowBackup="true"
@@ -22,55 +9,49 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
             android:name=".SplashActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".MainActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".watchlive.LivePlayerActivity"
-            android:configChanges="keyboardHidden|screenSize|orientation"></activity>
+            android:configChanges="keyboardHidden|screenSize|orientation" />
         <activity
             android:name=".push.PushActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".watchplayback.VodPlayerActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".document.DocActivity"
             android:hardwareAccelerated="true"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustPan"></activity>
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".im.IMActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".interactive.InteractiveActivity"
-            android:configChanges="keyboardHidden|screenSize|orientation"></activity>
+            android:configChanges="keyboardHidden|screenSize|orientation" />
 
         <activity
             android:name=".ConfigActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity android:name=".document.UploadDocumentActivity" />
         <activity
             android:name=".screenRecord.ScreenRecordActivity"
             android:launchMode="singleTask" />
 
-
-        <service android:name="com.vhall.framework.connect.VhallConnectService"/>
-        <!--直接使用SDK提供的ScreenRecordService-->
-        <!--<service android:name="com.vhall.aps.VHScreenRecordServicece" />-->
-        <!--继承ScreenRecordService后自定义实现onCreate方法的Service-->
-        <service android:name=".screenRecord.ScreenService" />
-
+        <service android:name=".screenRecord.ScreenService" /> <!-- 文档上传使用 -->
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="com.vhall.opensdk"

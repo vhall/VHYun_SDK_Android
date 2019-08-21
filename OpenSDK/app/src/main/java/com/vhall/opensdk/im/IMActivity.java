@@ -2,6 +2,7 @@ package com.vhall.opensdk.im;
 
 import android.app.Activity;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -13,19 +14,25 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.vhall.framework.connect.VhallConnectService;
 import com.vhall.ims.VHIM;
+import com.vhall.lss.play.VHLivePlayer;
 import com.vhall.message.ConnectServer;
 import com.vhall.opensdk.R;
+import com.vhall.player.Constants;
+import com.vhall.player.VHPlayerListener;
+import com.vhall.player.stream.play.impl.VHVideoPlayerView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.URLDecoder;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -40,15 +47,23 @@ public class IMActivity extends Activity {
 
     private String mChannelId = "";
     private String mAccessToken = "";
+    private String mRoomId = "";
     private LinearLayout ll_content;
     private EditText et;
     VHIM im;
     private OkHttpClient mClient;
+    private VHLivePlayer mPlayer;
+    private VHVideoPlayerView mVideoPlayer;
+    private ProgressBar mLoadingPB;
+    private ImageView mPlayBtn;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mChannelId = getIntent().getStringExtra("channelid");
+
+        mRoomId = getIntent().getStringExtra("roomId");
+        mChannelId = getIntent().getStringExtra("channelId");
         mAccessToken = getIntent().getStringExtra("token");
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN | WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.im_layout);
@@ -79,13 +94,121 @@ public class IMActivity extends Activity {
             }
         });
         im.join();
+
+        mLoadingPB = findViewById(R.id.pb_loading);
+        mPlayBtn = findViewById(R.id.btn_play);
+        mVideoPlayer = findViewById(R.id.vh_video_player);
+        mPlayer = new VHLivePlayer.Builder()
+                .videoPlayer(mVideoPlayer)
+                .listener(new MyListener())
+                .build();
+
+    }
+
+    class MyListener implements VHPlayerListener {
+
+        @Override
+        public void onStateChanged(Constants.State state) {
+            switch (state) {
+                case START:
+                    mLoadingPB.setVisibility(View.GONE);
+                    mPlayBtn.setImageResource(R.mipmap.icon_pause_bro);
+                    break;
+                case BUFFER:
+                    mLoadingPB.setVisibility(View.VISIBLE);
+                    break;
+                case STOP:
+                    mLoadingPB.setVisibility(View.GONE);
+                    mPlayBtn.setImageResource(R.mipmap.icon_start_bro);
+                    break;
+                case END:
+
+                    break;
+
+            }
+        }
+
+        @Override
+        public void onEvent(int event, String msg) {
+            switch (event) {
+                case Constants.Event.EVENT_DPI_LIST:
+
+                    break;
+                case Constants.Event.EVENT_DPI_CHANGED:
+
+                    break;
+                case Constants.Event.EVENT_URL:
+
+                    break;
+                case Constants.Event.EVENT_DOWNLOAD_SPEED:
+                    break;
+                case Constants.Event.EVENT_VIDEO_SIZE_CHANGED:
+                    break;
+                case Constants.Event.EVENT_STREAM_START://发起端发起
+
+                    break;
+                case Constants.Event.EVENT_STREAM_STOP://发起端停止
+
+                    break;
+                case Constants.Event.EVENT_NO_STREAM://暂未开始直播
+
+                    break;
+            }
+
+
+        }
+
+        @Override
+        public void onError(int errorCode, int innerCode, String msg) {
+            mLoadingPB.setVisibility(View.GONE);
+            switch (errorCode) {
+                case Constants.ErrorCode.ERROR_CONNECT:
+                    mLoadingPB.setVisibility(View.GONE);
+                    mPlayBtn.setImageResource(R.mipmap.icon_start_bro);
+                    Toast.makeText(IMActivity.this, "Error message:error connect " + msg, Toast.LENGTH_SHORT).show();
+                    break;
+
+            }
+        }
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mPlayer.isPlaying())
+            mPlayer.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mPlayer.resumeAble())
+            mPlayer.resume();
     }
 
     @Override
     protected void onDestroy() {
         im.leave();
         im = null;
+        mPlayer.release();
         super.onDestroy();
+    }
+
+    public void play(View view) {
+        if (mPlayer.isPlaying()) {
+            mPlayer.stop();
+        } else {
+            if (mPlayer.resumeAble()) {
+                mPlayer.resume();
+            } else {
+                if (!TextUtils.isEmpty(mRoomId)) {
+                    mPlayer.start(mRoomId, mAccessToken);
+                } else {
+                    Toast.makeText(this, "roomId is null", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
     }
 
     class EditListener implements TextView.OnEditorActionListener {
@@ -101,6 +224,7 @@ public class IMActivity extends Activity {
                     @Override
                     public void onFailure(int errorCode, String errorMsg) {
                         Log.e("imact", "errorCode:" + errorCode + "&errorMsg:" + errorMsg);
+                        Toast.makeText(IMActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -120,13 +244,13 @@ public class IMActivity extends Activity {
                 String time = text.optString("date_time");
                 String context = text.optString("context");
                 String dataStr = text.optString("data");
-                if (service_type.equals(VhallConnectService.TYPE_CUSTOM)) {//自定义消息处理
+                if (service_type.equals(VHIM.TYPE_CUSTOM)) {//自定义消息处理
                     addView(service_type, "", dataStr, time, "");
                 } else {
                     JSONObject data = new JSONObject(dataStr);
                     JSONObject contextObj = new JSONObject(context);
                     String nickName = contextObj.optString("nick_name");
-                    if(TextUtils.isEmpty(nickName)){
+                    if (TextUtils.isEmpty(nickName)) {
                         nickName = sender_id;
                     }
                     String avatar = contextObj.optString("avatar");
@@ -134,7 +258,7 @@ public class IMActivity extends Activity {
                     String type = data.optString("type");
                     int onlineNum = text.optInt("uv");
 //                Toast.makeText(IMActivity.this, " 当前在线人数 ： " + onlineNum, Toast.LENGTH_SHORT).show();
-                    if (service_type.equals(VhallConnectService.TYPE_ONLINE)) {
+                    if (service_type.equals(VHIM.TYPE_ONLINE)) {
                         addView(type, nickName, textContent, time, avatar);
                     } else {
                         addView(service_type, nickName, textContent, time, avatar);
@@ -158,11 +282,11 @@ public class IMActivity extends Activity {
         }
         TextView c = view.findViewById(R.id.content);
         TextView t = view.findViewById(R.id.time);
-        if (event.equals(VhallConnectService.TYPE_CUSTOM)) {
+        if (event.equals(VHIM.TYPE_CUSTOM)) {
             c.setText("接收的自定义消息" + nick_name + ": " + data);
-        } else if (event.equals(VhallConnectService.TYPE_JOIN)) {
+        } else if (event.equals(VHIM.TYPE_JOIN)) {
             c.setText(nick_name + ": 上线了");
-        } else if (event.equals(VhallConnectService.TYPE_LEAVE)) {
+        } else if (event.equals(VHIM.TYPE_LEAVE)) {
             c.setText(nick_name + ": 下线了");
         } else {
             c.setText(nick_name + ": " + data);

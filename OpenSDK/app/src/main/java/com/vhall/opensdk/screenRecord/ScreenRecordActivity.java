@@ -12,14 +12,14 @@ import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.vhall.slss.VHScreenRecordService;
-import com.vhall.slss.VHScreenRecorder;
+import com.vhall.lss.push.VHScreenRecordService;
 import com.vhall.opensdk.R;
 import com.vhall.push.VHLivePushConfig;
 import com.vhall.push.VHLivePushFormat;
@@ -38,6 +38,7 @@ public class ScreenRecordActivity extends Activity {
 
     public String token;
     public String roomId;
+    public String mChannelId;
     private MediaProjectionManager mMediaProjectionManager;
     private VHLivePushConfig config = null;
     ScreenService screenRecordService;
@@ -65,7 +66,11 @@ public class ScreenRecordActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.screen_record_layout);
         Log.e(TAG, "onCreate: ");
-        roomId = getIntent().getStringExtra("channelid");
+        roomId = getIntent().getStringExtra("roomId");
+        mChannelId = getIntent().getStringExtra("channelId");
+        if (TextUtils.isEmpty(roomId)) {
+            roomId = mChannelId;
+        }
         token = getIntent().getStringExtra("token");
 
         btnRecord = findViewById(R.id.btn_record);
@@ -74,9 +79,10 @@ public class ScreenRecordActivity extends Activity {
         Intent serviceIntent = new Intent(this, ScreenService.class);
         bindService(serviceIntent, connection, BIND_AUTO_CREATE);
 
-        config = new VHLivePushConfig(VHLivePushFormat.PUSH_MODE_XXHD);
+        config = new VHLivePushConfig(VHLivePushFormat.PUSH_MODE_XHD);
+        config.encodeType = VHLivePushFormat.ENCODE_TYPE_SOFT;
         config.screenOri = VHLivePushFormat.SCREEN_ORI_LANDSPACE;
-        config.videoBitrate = 800*1000;
+        config.videoBitrate = 800 * 1000;
         config.pushReconnectTimes = 15;
 
         mMediaProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
@@ -119,15 +125,14 @@ public class ScreenRecordActivity extends Activity {
             return;
         }
         //初始化SDK录屏操作
-        VHScreenRecorder mScreenRecorder = new VHScreenRecorder(config.videoWidth, config.videoHeight, 1, mediaProjection, config.videoFrameRate, null);
-        screenRecordService.startConnection(roomId, token, config, mScreenRecorder);
+        screenRecordService.start(roomId, token, config, mediaProjection);
 
 //        moveTaskToBack(true);
     }
 
     public void onScreenRecordPush(View view) {
         if (isRecording) {
-            screenRecordService.stopConnection();
+            screenRecordService.stop();
         } else {
             Intent captureIntent = mMediaProjectionManager.createScreenCaptureIntent();
             startActivityForResult(captureIntent, REQUEST_CODE);
@@ -143,12 +148,12 @@ public class ScreenRecordActivity extends Activity {
                 case 0://开始推流
                     isRecording = true;
                     Toast.makeText(context, "Screen recorder is running...", Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "onReceive: Screen recorder is running..." );
+                    Log.e(TAG, "onReceive: Screen recorder is running...");
                     break;
                 case 1://结束推流
                     isRecording = false;
                     Toast.makeText(context, "Screen recorder is stop", Toast.LENGTH_SHORT).show();
-                    Log.e(TAG, "onReceive: Screen recorder is stop" );
+                    Log.e(TAG, "onReceive: Screen recorder is stop");
                     break;
                 case 2://推流速率
                     String content = intent.getStringExtra("msg");
@@ -163,7 +168,7 @@ public class ScreenRecordActivity extends Activity {
                         int errorCode = obj.optInt("errorCode", -1);
                         String errorMsg = obj.optString("errorMsg", "");
                         Toast.makeText(context, "errorCode=" + errorCode + "--->errorMsg:" + errorMsg, Toast.LENGTH_SHORT).show();
-                        Log.e(TAG, "onReceive: errorCode="+errorCode +"errorMsg="+errorMsg);
+                        Log.e(TAG, "onReceive: errorCode=" + errorCode + "errorMsg=" + errorMsg);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }

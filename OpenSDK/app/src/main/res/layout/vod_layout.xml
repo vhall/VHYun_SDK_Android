@@ -174,15 +174,16 @@
             android:checked="true"
             android:text="FreeSeek"
             android:textColor="#5fffffff" />
+
         <TextView
             android:id="@+id/tv_scale_type"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="fitXY"
-            android:textColor="#ffffff"
-            android:padding="5dp"
+            android:layout_above="@id/iv_screen_shot"
             android:layout_marginLeft="5dp"
-            android:layout_above="@id/iv_screen_shot"/>
+            android:padding="5dp"
+            android:text="fitXY"
+            android:textColor="#ffffff" />
 
 
         <RadioGroup
@@ -199,21 +200,21 @@
                 android:layout_height="wrap_content"
                 android:checked="true"
                 android:text="c"
-                android:textColor="#ffffff"/>
+                android:textColor="#ffffff" />
 
             <RadioButton
                 android:id="@+id/rb_water_mark_t"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="t"
-                android:textColor="#ffffff"/>
+                android:textColor="#ffffff" />
 
             <RadioButton
                 android:id="@+id/rb_water_mark_b"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="b"
-                android:textColor="#ffffff"/>
+                android:textColor="#ffffff" />
         </RadioGroup>
     </RelativeLayout>
 
@@ -222,18 +223,24 @@
         android:layout_height="0dp"
         android:layout_weight="2">
 
-        <com.vhall.document.DocumentView
+        <!--<com.vhall.document.DocumentView
             android:id="@+id/doc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true" />
+            android:layout_centerInParent="true" />-->
+        <RelativeLayout
+            android:id="@+id/doc_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"/>
+
         <ImageView
             android:id="@+id/iv_screen_show"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:onClick="dismissScreenShow"
             android:scaleType="centerInside"
-            android:visibility="gone"/>
+            android:visibility="gone" />
 
     </RelativeLayout>
 

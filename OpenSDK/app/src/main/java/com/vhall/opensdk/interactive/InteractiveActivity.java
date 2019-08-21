@@ -17,7 +17,7 @@ public class InteractiveActivity extends FragmentActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mRoomId = getIntent().getStringExtra("channelid");
+        mRoomId = getIntent().getStringExtra("channelId");
         mAccessToken = getIntent().getStringExtra("token");
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.interactive_layout);
