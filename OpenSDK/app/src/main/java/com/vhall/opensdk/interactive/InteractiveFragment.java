@@ -8,9 +8,11 @@ import android.content.SharedPreferences;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.UiThread;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -75,6 +77,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
     public String mRoomId;
     public String mAccessToken;
+    public Boolean isNodelayLiveAudience=false;//无延迟直播观众角色
     VHInteractive interactive = null;
     boolean isEnable = false;//是否可用
     boolean isOnline = false;//是否上麦
@@ -129,6 +132,15 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         return fragment;
     }
 
+    public static InteractiveFragment getInstance(String roomid, String accessToken,Boolean isNodelayLiveAudience) {
+        InteractiveFragment fragment = new InteractiveFragment();
+        fragment.mRoomId = roomid;
+        fragment.mAccessToken = accessToken;
+        fragment.isNodelayLiveAudience=isNodelayLiveAudience;
+        return fragment;
+    }
+
+
     @Override
     public void onAttach(Context context) {
         mContext = context;
@@ -158,8 +170,12 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         interactive = new VHInteractive(mContext, new RoomListener());
         interactive.setOnMessageListener(new MyMessageListener());
 //        VHTool.enableDebugLog(true);
-        initLocalView();
-        initLocalStream();
+        if(!isNodelayLiveAudience)
+        {
+            initLocalView();
+            initLocalStream();
+        }
+
         mAdapter = new StreamAdapter();
         mLayoutManager = new LinearLayoutManager(mContext);
         mLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
@@ -179,7 +195,10 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         } else if (!isOnline) {
             interactive.setListener(new RoomListener());
             interactive.enterRoom(mRoomAttr);
-            localView.setStream(localStream);
+            if (localStream != null) {
+                localStream.removeAllRenderView();
+                localStream.addRenderView(localView);
+            }
         }
     }
 
@@ -202,7 +221,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
 
     private void initInteractive() {
-        interactive.init(mRoomId, mAccessToken, new VHInteractive.InitCallback() {
+        interactive.init(mRoomId, mAccessToken,mBroadcastid, isNodelayLiveAudience?VHInteractive.MODE_LIVE:VHInteractive.MODE_RTC,isNodelayLiveAudience?VHInteractive.ROLE_AUDIENCE:VHInteractive.ROLE_HOST,new VHInteractive.InitCallback() {
             @Override
             public void onSuccess() {
                 isEnable = true;
@@ -324,8 +343,18 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         @Override
         public void onDidUpdateOfStream(Stream stream, JSONObject jsonObject) {//流状态更新
             Log.i(TAG, "onDidUpdateOfStream");
+            JSONObject obj = jsonObject.optJSONObject("muteStream");
+            boolean muteAudio = obj.optBoolean("audio");// true 禁音、false 未禁音
+            boolean muteVideo = obj.optBoolean("video");// true 禁视频、 false 未禁视频
+            //订阅端如需更新标识可自行处理业务逻辑
         }
 
+        /**
+         * 互动房间重连
+         *
+         * @param i  总重连次数
+         * @param i1 当前重连次数
+         */
         @Override
         public void onReconnect(int i, int i1) {
             Log.e(TAG, "onReconnect" + i + " i1 " + i1);
@@ -341,6 +370,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     private void initLocalView() {
         localView.init(null, null);
         localView.setScalingMode(SurfaceViewRenderer.VHRenderViewScalingMode.kVHRenderViewScalingModeAspectFit);
+        localView.setMirror(true);
     }
 
     //初始化本地流
@@ -349,33 +379,53 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         int pixType = 0;
         JSONObject option = new JSONObject();
         try {
-            switch (layerType) {
-                case 0:
-                    pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution192x144.getValue();
-                    option.put(Stream.kFrameResolutionTypeKey, pixType);
-                    break;
-                case 1:
-                    pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution320x240.getValue();
-                    option.put(Stream.kFrameResolutionTypeKey, pixType);
-                    break;
-                case 2:
-                    //该分辨率下支持双流
-                    pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution480x360.getValue();
-                    option.put(Stream.kFrameResolutionTypeKey, pixType);
-                    //重置双流码率，当前分辨率默认码率仅支持单流
-                    option.put(Stream.kMinBitrateKbpsKey, 200);
-                    option.put(Stream.kCurrentBitrateKey, 400);
-                    option.put(Stream.kMaxBitrateKey, 600);
-                    break;
-            }
+//            switch (layerType) {
+//                case 0:
+//                    pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution192x144.getValue();
+//                    option.put(Stream.kFrameResolutionTypeKey, pixType);
+//                    break;
+//                case 1:
+//                    pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution320x240.getValue();
+//                    option.put(Stream.kFrameResolutionTypeKey, pixType);
+//                    break;
+//                case 2:
+//                    //该分辨率下支持双流
+//                    pixType = Stream.VhallFrameResolutionValue.VhallFrameResolution480x360.getValue();
+//                    option.put(Stream.kFrameResolutionTypeKey, pixType);
+//                    //重置双流码率，当前分辨率默认码率仅支持单流
+//                    option.put(Stream.kMinBitrateKbpsKey, 200);
+//                    option.put(Stream.kCurrentBitrateKey, 400);
+//                    option.put(Stream.kMaxBitrateKey, 600);
+//                    break;
+//            }
+//            option.put(Stream.kStreamOptionStreamType, Stream.VhallStreamType.VhallStreamTypeAudioAndVideo.getValue());
+//            option.put(Stream.kNumSpatialLayersKey, layerType);//单双流设置 2 双流 其他默认单流
+
+
+            option.put(Stream.kMinBitrateKbpsKey, 400);
+            option.put(Stream.kCurrentBitrateKey, 1200);
+            option.put(Stream.kMaxBitrateKey, 1500);
+            option.put(Stream.kVideoHeightKey,720);
+            option.put(Stream.kVideoWidthKey,1280);
+//            option.put(Stream.kFrameResolutionTypeKey, Stream.VhallFrameResolutionValue.VhallFrameResolution640x480.getValue());
+
+
+
+//            option.put(Stream.kMinBitrateKbpsKey,225);
+//            option.put(Stream.kCurrentBitrateKey, 500);
+//            option.put(Stream.kMaxBitrateKey, 600);
+
             option.put(Stream.kStreamOptionStreamType, Stream.VhallStreamType.VhallStreamTypeAudioAndVideo.getValue());
-            option.put(Stream.kNumSpatialLayersKey, layerType);//单双流设置 2 双流 其他默认单流
+            option.put(Stream.kNumSpatialLayersKey, 2);
         } catch (JSONException e) {
             e.printStackTrace();
         }
         localStream = interactive.createLocalStream(option, "paassdk");
 //        localStream = interactive.createLocalStream(pixType, "paassdk", layerType);
-        localView.setStream(localStream);
+        if (localStream != null) {
+            localStream.removeAllRenderView();
+            localStream.addRenderView(localView);
+        }
         tempLocal = localStream;
     }
 
@@ -385,7 +435,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(mContext, "无上麦权限", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, "无权限或观看的无延时直播", Toast.LENGTH_SHORT).show();
                 }
             });
             return;
@@ -486,6 +536,10 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                         Toast.makeText(mContext, "您已被踢出房间！", Toast.LENGTH_SHORT).show();
                         getActivity().finish();
                         break;
+                    case VHInteractive.force_leave_inav:
+                        Toast.makeText(mContext, "您已强制被踢出房间！", Toast.LENGTH_SHORT).show();
+                        getActivity().finish();
+                        break;
                     case VHInteractive.user_publish_callback:
                         String action = "";
                         switch (status) {
@@ -519,7 +573,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
         @Override
         public void onRefreshMembers(JSONObject obj) {
-            int onlineNum = obj.optInt("user_online_num");
+            int onlineNum = obj.optInt("uv");
             mOnlineTV.setText("online:" + onlineNum);
         }
     }
@@ -548,7 +602,8 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             Stream item = (Stream) v.getTag();
             if (item != null && item.streamId == stream.streamId) {
                 VHRenderView renderView = v.findViewById(R.id.renderview);
-                renderView.setStream(stream);
+                stream.removeAllRenderView();
+                stream.addRenderView(renderView);
                 added = true;
                 break;
             }
@@ -602,6 +657,20 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mInfoBtn = getView().findViewById(R.id.iv_info);
         mOnlineTV = getView().findViewById(R.id.tv_online);
         btnScreen = getView().findViewById(R.id.btn_screen_record);
+//无延迟直播
+        if(isNodelayLiveAudience){
+            localView.setVisibility(View.GONE);
+            mReqBtn.setVisibility(View.GONE);
+            mQuitBtn.setVisibility(View.GONE);
+            btnScreen.setVisibility(View.GONE);
+            mBroadcastTB.setVisibility(View.GONE);
+            mVideoTB.setVisibility(View.GONE);
+            mAudioTB.setVisibility(View.GONE);
+            mDualTB.setVisibility(View.GONE);
+            mSwitchCameraBtn.setVisibility(View.GONE);
+            mInfoBtn.setVisibility(View.GONE);
+        }
+
         btnScreen.setOnClickListener(this);
 //        tvScaleType = getView().findViewById(R.id.tv_scale_type);
         mJoinBtn.setOnClickListener(this);
@@ -625,7 +694,27 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                     return;
                 }
                 int type = isChecked ? 1 : 2;
-                interactive.broadcastRoom(mBroadcastid, type, null);
+                interactive.broadcastRoom(type, new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, "推旁路失败", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(mContext, "推旁路成功", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                });
             }
         });
         mVideoTB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -815,6 +904,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                             @Override
                             public void run() {
                                 Toast.makeText(mContext, obj.optString("msg"), Toast.LENGTH_SHORT).show();
+                                getActivity().finish();
                             }
                         });
                     }
@@ -893,7 +983,10 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         public void onBindViewHolder(@NonNull MyHolder holder, int position) {
             Log.e(TAG, "onBindViewHolder:" + position);
             Stream stream = mStreams.get(position);
-            holder.renderView.setStream(stream);
+            if (stream != null) {
+                stream.removeAllRenderView();
+                stream.addRenderView(holder.renderView);
+            }
             holder.renderView.setTag(stream);
             holder.tvDescribe.setText(stream.userId);
             holder.cbVideo.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

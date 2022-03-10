@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="vh_colorPrimary">#007AFF</color>
+    <color name="vh_seek_bar_point">#164183</color>
+    <color name="vh_colorPrimaryBackground">#ffffff</color>
+    <color name="white">#ffffff</color>
+    <color name="black">#000000</color>
+    <color name="pop_bg">#b3000000</color>
+    <color name="switch_off">#444444</color>
+
+</resources>

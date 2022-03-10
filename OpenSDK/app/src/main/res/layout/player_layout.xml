@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
     <RelativeLayout
+        android:id="@+id/rl_player_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
@@ -62,6 +64,15 @@
                 android:src="@mipmap/img_round_camera" />
 
             <ImageView
+                android:id="@+id/iv_dlna"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/btn_screen_shot"
+                android:layout_margin="5dp"
+                android:onClick="onProjectionScreen"
+                android:src="@drawable/push_tv" />
+
+            <ImageView
                 android:id="@+id/btn_play"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -94,10 +105,42 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="2">
+
         <RelativeLayout
             android:id="@+id/rl_ops_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
+        <TextView
+            android:id="@+id/tv_resize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="切换文档大小"/>
+        <TextView
+            android:id="@+id/tv_width"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="宽："
+            android:layout_toRightOf="@+id/tv_resize"/>
+        <EditText
+            android:id="@+id/edt_doc_width"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="50dp"
+            android:text="500"
+            android:layout_toRightOf="@+id/tv_width"/>
+        <TextView
+            android:id="@+id/tv_height"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="高："
+            android:layout_toRightOf="@+id/edt_doc_width"/>
+        <EditText
+            android:id="@+id/edt_doc_height"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="50dp"
+            android:text="400"
+            android:layout_toRightOf="@+id/tv_height"/>
 
         <ImageView
             android:id="@+id/iv_screen_show"
@@ -108,5 +151,13 @@
             android:onClick="screenImageOnClick"
             android:scaleType="fitCenter"
             android:visibility="gone" />
+        <CheckBox
+            android:id="@+id/cb_fullscreen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:button="@null"
+            android:background="@drawable/selector_ic_fullscreen"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="10dp"/>
     </RelativeLayout>
 </LinearLayout>

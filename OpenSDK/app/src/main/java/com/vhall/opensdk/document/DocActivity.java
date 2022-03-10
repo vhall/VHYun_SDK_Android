@@ -156,6 +156,7 @@ public class DocActivity extends Activity {
         public void onEvent(String event, String type, String cid) {
             if (event.equals(KEY_OPERATE)) {
                 if (type.equals(TYPE_ACTIVE)) {
+                    //激活文档对象，切换文档实例
                     replaceView();
                 } else if (type.equals(TYPE_CREATE)) {
                     //创建文档
@@ -170,11 +171,11 @@ public class DocActivity extends Activity {
                     idList.remove(cid);
                     tabAdapter.setIdList(idList);
                 } else if (type.equals(TYPE_SWITCHOFF)) {
-                    //关闭文档演示
+                    //关闭文档演示（针对整个文档模块）
                     rlContainer.setVisibility(View.GONE);
                     switchDemo.setChecked(false);
                 } else if (type.equals(TYPE_SWITCHON)) {
-                    //打开文档演示
+                    //打开文档演示(针对文档模块)
                     rlContainer.setVisibility(View.VISIBLE);
                     switchDemo.setChecked(true);
                 }
@@ -293,10 +294,10 @@ public class DocActivity extends Activity {
             mDocView.addListener(eventListener);
             if (rl != null) {
                 rl.removeAllViews();
-                rl.addView(mDocView);
                 RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
                 params.addRule(RelativeLayout.CENTER_IN_PARENT);
-                mDocView.setLayoutParams(params);
+                rl.addView(mDocView,params);
+
             }
         }
     }

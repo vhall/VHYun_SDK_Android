@@ -1,40 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
     <RelativeLayout
+        android:id="@+id/rl_player_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="#000000">
 
-        <!--<com.vhall.player.vod.VodPlayerView
+<!--        <com.vhall.player.vod.VodPlayerView
             android:id="@+id/surfaceview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"/>-->
+            android:layout_height="match_parent"/>-->
         <SurfaceView
             android:id="@+id/surfaceview"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"/>
+
+        <TextView
+            android:id="@+id/subtitle_view"
+            android:layout_width="328dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="32dp"
+            android:gravity="center"
+            android:textColor="#ffffff"
+            android:textSize="20sp" />
 
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:padding="10dp">
 
-            <SeekBar
+            <com.vhall.opensdk.watchplayback.PointSeekbar
                 android:id="@+id/seekbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
+
+            <com.vhall.opensdk.watchplayback.PointView
+                android:id="@+id/pointView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/seekbar"
+                android:layout_centerHorizontal="true"
+                android:visibility="invisible"
+                android:layout_marginTop="8dp" />
 
             <TextView
                 android:id="@+id/tv_pos"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/seekbar" />
+                android:layout_below="@+id/seekbar"
+                android:textColor="#00ff00" />
 
             <TextView
                 android:id="@+id/tv_max"
@@ -191,7 +213,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
             android:orientation="horizontal">
 
             <RadioButton
@@ -216,9 +237,30 @@
                 android:text="b"
                 android:textColor="#ffffff" />
         </RadioGroup>
+        <CheckBox
+            android:id="@+id/cb_fullscreen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:button="@null"
+            android:background="@drawable/selector_ic_fullscreen"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="10dp"/>
+
+        <ImageView
+            android:id="@+id/iv_dlna_playback"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="15dp"
+            android:layout_toLeftOf="@+id/cb_fullscreen"
+            android:background="@drawable/push_tv" />
     </RelativeLayout>
 
     <RelativeLayout
+        android:id="@+id/rl_tool_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="2">

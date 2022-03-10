@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -15,14 +16,32 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.vhall.framework.VhallSDK;
+import com.vhall.httpclient.utils.OKHttpUtils;
 import com.vhall.opensdk.document.DocActivity;
 import com.vhall.opensdk.document.UploadDocumentActivity;
 import com.vhall.opensdk.im.IMActivity;
 import com.vhall.opensdk.interactive.InteractiveActivity;
 import com.vhall.opensdk.push.PushActivity;
 import com.vhall.opensdk.screenRecord.ScreenRecordActivity;
+import com.vhall.opensdk.upload.UploadActivity;
+import com.vhall.opensdk.util.SpUtils;
 import com.vhall.opensdk.watchlive.LivePlayerActivity;
+import com.vhall.opensdk.watchlive.LivePlayerUiActivity;
 import com.vhall.opensdk.watchplayback.VodPlayerActivity;
+import com.vhall.opensdk.watchplayback.VodPlayerUiActivity;
+import com.vhall.player.AsyncHttpsURLConnection;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import static android.Manifest.permission.CAMERA;
 import static android.Manifest.permission.RECORD_AUDIO;
@@ -51,6 +70,7 @@ public class MainActivity extends Activity {
     SharedPreferences sp;
     private String token;
     private String roomid;
+    private String chatId;
 
 
     @Override
@@ -68,17 +88,20 @@ public class MainActivity extends Activity {
                 startActivity(intent);
             }
         });
+        chatId = SpUtils.share().getChatId();
     }
 
     public void push(View view) {
+        chatId = SpUtils.share().getChatId();
+        roomid = sp.getString(KEY_LSS_ID, "");
         if (getPushPermission(REQUEST_PUSH)) {
-            roomid = sp.getString(KEY_LSS_ID, "");
             Intent intent = new Intent(this, PushActivity.class);
             startAct(intent);
         }
     }
 
     public void playlive(View view) {
+        chatId = SpUtils.share().getChatId();
         roomid = sp.getString(KEY_LSS_ID, "");
         Intent intent = new Intent(this, LivePlayerActivity.class);
         startAct(intent);
@@ -86,6 +109,7 @@ public class MainActivity extends Activity {
 
     //观看回放需要下载、保存和读取文档信息
     public void playvod(View view) {
+        chatId = SpUtils.share().getChatId();
         roomid = sp.getString(KEY_VOD_ID, "");
         if (getStoragePermission()) {
             Intent intent = new Intent(this, VodPlayerActivity.class);
@@ -96,6 +120,7 @@ public class MainActivity extends Activity {
 
     //需要文件读取权限
     public void uploadDocument(View view) {
+        roomid = sp.getString(KEY_CHAT_ID, "");
         if (getUploadPermission()) {
             Intent intent = new Intent(this, UploadDocumentActivity.class);
             startAct(intent);
@@ -103,7 +128,7 @@ public class MainActivity extends Activity {
     }
 
     public void showDoc(View view) {
-        roomid = sp.getString(KEY_CHAT_ID, "");
+        roomid = sp.getString(KEY_LSS_ID, "");
         if (getPushPermission(REQUEST_PUSH_WITH_DOC)) {
             Intent intent = new Intent(this, DocActivity.class);
             startAct(intent);
@@ -112,7 +137,8 @@ public class MainActivity extends Activity {
     }
 
     public void showIM(View view) {
-        roomid = sp.getString(KEY_CHAT_ID, "");
+        roomid = sp.getString(KEY_LSS_ID, "");
+        chatId = SpUtils.share().getChatId();
         Intent intent = new Intent(this, IMActivity.class);
         startAct(intent);
     }
@@ -125,11 +151,45 @@ public class MainActivity extends Activity {
         }
     }
 
+    public void showScreenRecordInteractive(View view) {
+        roomid = sp.getString(KEY_INAV_ID, "");
+        if (getPushPermission(REQUEST_INTERACTIVE)) {
+            Intent intent = new Intent(this, InteractiveActivity.class);
+            intent.putExtra("type", InteractiveActivity.SCREEN_RECORD_LIVE);
+            startAct(intent);
+        }
+    }
+    //无延时直播 只订阅无推流
+    public void showNodelayLive(View view) {
+        roomid = sp.getString(KEY_INAV_ID, "");
+        Intent intent = new Intent(this, InteractiveActivity.class);
+        intent.putExtra("type",InteractiveActivity.NODELAY_LIVE);
+        startAct(intent);
+    }
     public void showScreenRecord(View view) {
         roomid = sp.getString(KEY_LSS_ID, "");
         if (getAudioRecordPermission()) {
             Intent intent = new Intent(this, ScreenRecordActivity.class);
             startAct(intent);
+        }
+    }
+
+    public void showUiVod(View view) {
+        roomid = sp.getString(KEY_VOD_ID, "");
+        Intent intent = new Intent(this, VodPlayerUiActivity.class);
+        startAct(intent);
+    }
+
+    public void showUiLss(View view) {
+        roomid = sp.getString(KEY_LSS_ID, "");
+        Intent intent = new Intent(this, LivePlayerUiActivity.class);
+        startAct(intent);
+    }
+
+    public void showUpload(View view) {
+        if (getStoragePermission()) {
+            Intent intent = new Intent(this, UploadActivity.class);
+            startActivity(intent);
         }
     }
 
@@ -225,8 +285,8 @@ public class MainActivity extends Activity {
 
     private void startAct(Intent intent) {
         token = sp.getString(KEY_TOKEN, "");
-        if (TextUtils.isEmpty(roomid) || TextUtils.isEmpty(token)){
-            Toast.makeText(this,"roomId or token is null!",Toast.LENGTH_SHORT).show();
+        if (TextUtils.isEmpty(roomid) || TextUtils.isEmpty(token)) {
+            Toast.makeText(getApplicationContext(), "roomid/token为空", Toast.LENGTH_LONG).show();
             return;
         }
         if (roomid.contains(",")) {
@@ -235,7 +295,8 @@ public class MainActivity extends Activity {
             intent.putExtra("channelId", data[1]);
             intent.putExtra("token", token);
         } else {
-            intent.putExtra("channelId", roomid);
+            intent.putExtra("roomId", roomid);
+            intent.putExtra("channelId", chatId);
             intent.putExtra("token", token);
         }
         startActivity(intent);

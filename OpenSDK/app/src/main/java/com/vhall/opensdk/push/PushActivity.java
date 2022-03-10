@@ -21,9 +21,13 @@ import android.widget.Toast;
 
 import com.vhall.framework.connect.VhallConnectService;
 import com.vhall.ims.VHIM;
+import com.vhall.ims.message.IBody;
+import com.vhall.ims.message.IVHMessage;
 import com.vhall.lss.push.VHLivePusher;
 import com.vhall.message.ConnectServer;
 import com.vhall.opensdk.R;
+import com.vhall.opensdk.im.IMActivity;
+import com.vhall.opensdk.util.KeyBoardManager;
 import com.vhall.player.Constants;
 import com.vhall.player.VHPlayerListener;
 import com.vhall.push.IVHCapture;
@@ -291,14 +295,17 @@ public class PushActivity extends Activity {
         @Override
         public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
             if (actionId == EditorInfo.IME_ACTION_SEND) {
-                im.sendMsg(v.getText().toString(), new VHIM.Callback() {
+                im.sendMsg(et.getText().toString(), new VHIM.Callback() {
                     @Override
                     public void onSuccess() {
+                        et.setText("");
+                        KeyBoardManager.closeKeyboard(et, PushActivity.this);
                         Log.i("IMACt", "success");
                     }
 
                     @Override
                     public void onFailure(int errorCode, String errorMsg) {
+                        KeyBoardManager.closeKeyboard(et, PushActivity.this);
                         Log.e("imact", "errorCode:" + errorCode + "&errorMsg:" + errorMsg);
                         Toast.makeText(PushActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
                     }
@@ -343,6 +350,11 @@ public class PushActivity extends Activity {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+        }
+
+        @Override
+        public void onChannelStatus(String msg) {
+
         }
     }
 

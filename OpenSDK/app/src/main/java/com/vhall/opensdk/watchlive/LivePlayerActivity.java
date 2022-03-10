@@ -1,15 +1,30 @@
 package com.vhall.opensdk.watchlive;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.webkit.WebView;
+import android.widget.AdapterView;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -19,11 +34,16 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vhall.business_support.dlna.DMCControl;
+import com.vhall.business_support.dlna.DeviceDisplay;
 import com.vhall.document.DocumentView;
 import com.vhall.logmanager.L;
 import com.vhall.lss.play.VHLivePlayer;
 import com.vhall.opensdk.R;
 import com.vhall.opensdk.document.DocActivity;
+import com.vhall.opensdk.interactive.InteractiveActivity;
+import com.vhall.opensdk.watchplayback.DevicePopu;
+import com.vhall.opensdk.watchplayback.VodPlayerActivity;
 import com.vhall.ops.VHOPS;
 import com.vhall.player.Constants;
 import com.vhall.player.VHPlayerListener;
@@ -31,9 +51,21 @@ import com.vhall.player.stream.LivePlayer;
 import com.vhall.player.stream.play.IVHVideoPlayer;
 import com.vhall.player.stream.play.impl.VHVideoPlayerView;
 
+import org.fourthline.cling.android.AndroidUpnpService;
+import org.fourthline.cling.android.AndroidUpnpServiceImpl;
+import org.fourthline.cling.android.FixedAndroidLogHandler;
+import org.fourthline.cling.model.meta.Device;
+import org.fourthline.cling.model.meta.LocalDevice;
+import org.fourthline.cling.model.meta.RemoteDevice;
+import org.fourthline.cling.model.types.DeviceType;
+import org.fourthline.cling.model.types.UDADeviceType;
+import org.fourthline.cling.registry.DefaultRegistryListener;
+import org.fourthline.cling.registry.Registry;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Collection;
 
 import static com.vhall.ops.VHOPS.ERROR_CONNECT;
 import static com.vhall.ops.VHOPS.ERROR_DOC_INFO;
@@ -71,17 +103,24 @@ public class LivePlayerActivity extends Activity {
     LinearLayout ll_urls;
     Handler handler = new Handler();
     VHOPS mDocument;
-    RelativeLayout rlOpsContainer;
-
+    RelativeLayout rlOpsContainer, rlPlayerContent;
+    private CheckBox cbFullScreen;
+    private TextView tvResize;
+    private EditText edtWidth, edtHeight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         roomId = getIntent().getStringExtra("roomId");
         channelId = getIntent().getStringExtra("channelId");
+
         if (TextUtils.isEmpty(roomId)) {
             roomId = channelId;
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
+
         accessToken = getIntent().getStringExtra("token");
 //        roomId = "lss_772f6eda";
 //        accessToken = "vhall";
@@ -95,10 +134,45 @@ public class LivePlayerActivity extends Activity {
         mSpeedTV = this.findViewById(R.id.tv_speed);
         ivScreen = findViewById(R.id.iv_screen_show);
         rlOpsContainer = findViewById(R.id.rl_ops_container);
+
+        cbFullScreen = findViewById(R.id.cb_fullscreen);
+        rlPlayerContent = findViewById(R.id.rl_player_content);
+
+
+        tvResize = findViewById(R.id.tv_resize);
+        edtWidth = findViewById(R.id.edt_doc_width);
+        edtHeight = findViewById(R.id.edt_doc_height);
+
+
+        tvResize.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDocument.getActiveView().getLayoutParams().width = Integer.valueOf(edtWidth.getText().toString());
+                mDocument.getActiveView().getLayoutParams().height = Integer.valueOf(edtHeight.getText().toString());
+
+                mDocument.getActiveView().setLayoutParams(mDocument.getActiveView().getLayoutParams());
+
+            }
+        });
+
+
+        cbFullScreen.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                } else {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                }
+            }
+        });
+
+
         mDPIGroup.setOnCheckedChangeListener(new OnCheckedChange());
         mVideoPlayer.setDrawMode(Constants.VideoMode.DRAW_MODE_ASPECTFIT);
         mPlayer = new VHLivePlayer.Builder()
                 .videoPlayer(mVideoPlayer)
+                .bufferSeconds(4)
                 .listener(new MyListener())
                 .build();
         mPlayer.start(roomId, accessToken);
@@ -106,6 +180,30 @@ public class LivePlayerActivity extends Activity {
         mDocument = new VHOPS(this, channelId, roomId, accessToken, true);
         mDocument.setListener(opsListener);
         mDocument.join();
+
+        //TODO 投屏相关
+        org.seamless.util.logging.LoggingUtil.resetRootHandler(
+                new FixedAndroidLogHandler()
+        );
+        this.bindService(
+                new Intent(this, AndroidUpnpServiceImpl.class),
+                serviceConnection,
+                Context.BIND_AUTO_CREATE
+        );
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            rlPlayerContent.setVisibility(View.VISIBLE);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        } else {
+            rlPlayerContent.setVisibility(View.GONE);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
     }
 
     private VHOPS.EventListener opsListener = new VHOPS.EventListener() {
@@ -118,9 +216,9 @@ public class LivePlayerActivity extends Activity {
                     if (rlOpsContainer != null) {
                         rlOpsContainer.removeAllViews();
                         DocumentView mDocView = mDocument.getActiveView();
-                        rlOpsContainer.addView(mDocView);
                         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-                        mDocView.setLayoutParams(params);
+                        params.addRule(RelativeLayout.CENTER_IN_PARENT);
+                        rlOpsContainer.addView(mDocView,params);
                     }
                 } else if (type.equals(TYPE_CREATE)) {
                     //创建文档
@@ -163,7 +261,6 @@ public class LivePlayerActivity extends Activity {
 
     public void screenImageOnClick(View view) {
         ivScreen.setVisibility(View.GONE);
-
     }
 
     public void screenShot(View view) {
@@ -177,6 +274,10 @@ public class LivePlayerActivity extends Activity {
                 }
             });
         }
+    }
+
+    public void onProjectionScreen(View view) {
+        showDevices();
     }
 
     private class OnCheckedChange implements RadioGroup.OnCheckedChangeListener {
@@ -343,4 +444,134 @@ public class LivePlayerActivity extends Activity {
         }
 
     }
+
+
+    //TODO 投屏相关
+//    ------------------------------------------------------投屏相关--------------------------------------------------
+    private LivePlayerActivity.BrowseRegistryListener registryListener = new LivePlayerActivity.BrowseRegistryListener();
+    private DevicePopu devicePopu;
+    private AndroidUpnpService upnpService;
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            Log.e("Service ", "mUpnpServiceConnection onServiceConnected");
+            upnpService = (AndroidUpnpService) service;
+            // Clear the list
+            if (devicePopu != null) {
+                devicePopu.clear();
+            }
+            // Get ready for future device advertisements
+            upnpService.getRegistry().addListener(registryListener);
+            // Now add all devices to the list we already know about
+            for (Device device : upnpService.getRegistry().getDevices()) {
+                registryListener.deviceAdded(device);
+            }
+            // Search asynchronously for all devices, they will respond soon
+            upnpService.getControlPoint().search(); // 搜索设备
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName className) {
+            upnpService = null;
+        }
+    };
+
+    protected class BrowseRegistryListener extends DefaultRegistryListener {
+
+        @Override
+        public void remoteDeviceDiscoveryStarted(Registry registry, RemoteDevice device) {
+//            deviceAdded(device);
+        }
+
+        @Override
+        public void remoteDeviceDiscoveryFailed(Registry registry, final RemoteDevice device, final Exception ex) {
+
+        }
+        /* End of optimization, you can remove the whole block if your Android handset is fast (>= 600 Mhz) */
+
+        @Override
+        public void remoteDeviceAdded(Registry registry, RemoteDevice device) {
+            if (device.getType().getNamespace().equals("schemas-upnp-org") && device.getType().getType().equals("MediaRenderer")) {
+                deviceAdded(device);
+            }
+
+        }
+
+        @Override
+        public void remoteDeviceRemoved(Registry registry, RemoteDevice device) {
+            deviceRemoved(device);
+        }
+
+        @Override
+        public void localDeviceAdded(Registry registry, LocalDevice device) {
+//            deviceAdded(device);
+        }
+
+        @Override
+        public void localDeviceRemoved(Registry registry, LocalDevice device) {
+//            deviceRemoved(device);
+        }
+
+        public void deviceAdded(final Device device) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (devicePopu == null) {
+                        devicePopu = new DevicePopu(LivePlayerActivity.this);
+                        devicePopu.setOnItemClickListener(new LivePlayerActivity.OnItemClick());
+                    }
+                    devicePopu.deviceAdded(device);
+                }
+            });
+        }
+
+        public void deviceRemoved(final Device device) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (devicePopu == null) {
+                        devicePopu = new DevicePopu(LivePlayerActivity.this);
+                        devicePopu.setOnItemClickListener(new LivePlayerActivity.OnItemClick());
+                    }
+                    devicePopu.deviceRemoved(device);
+                }
+            });
+        }
+    }
+
+    class OnItemClick implements AdapterView.OnItemClickListener {
+
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            final DeviceDisplay deviceDisplay = (DeviceDisplay) parent.getItemAtPosition(position);
+            DMCControl dmcControl = new DMCControl(deviceDisplay, upnpService, mPlayer.getOriginalUrl(), mPlayer.getProjectionScreen());
+            devicePopu.setDmcControl(dmcControl);
+        }
+    }
+
+    public static final DeviceType DMR_DEVICE_TYPE = new UDADeviceType("MediaRenderer");
+
+    public Collection<Device> getDmrDevices() {
+        if (upnpService == null) {
+            return null;
+        }
+        Collection<Device> devices = upnpService.getRegistry().getDevices(DMR_DEVICE_TYPE);
+        return devices;
+    }
+
+    public void showDevices() {
+        if (devicePopu == null) {
+            devicePopu = new DevicePopu(this);
+            devicePopu.setOnItemClickListener(new LivePlayerActivity.OnItemClick());
+        }
+        devicePopu.showAtLocation(getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
+    }
+
+    public void dismissDevices() {
+        if (devicePopu != null) {
+            devicePopu.dismiss();
+        }
+    }
+
 }

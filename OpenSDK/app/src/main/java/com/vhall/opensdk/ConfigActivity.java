@@ -22,6 +22,7 @@ import static android.Manifest.permission.CAMERA;
 
 public class ConfigActivity extends Activity {
 
+    public static final String KEY_APP_ID = "app_id";
     public static final String KEY_BROADCAST_ID = "broid";
     public static final String KEY_PIX_TYPE = "pix_type";
     public static final String KEY_LSS_ID = "lss_id";
@@ -29,9 +30,13 @@ public class ConfigActivity extends Activity {
     public static final String KEY_CHAT_ID = "chat_id";
     public static final String KEY_INAV_ID = "inav_id";
     public static final String KEY_TOKEN = "token";
-    public static final String KEY_DOC_ID ="doc_id";
+    public static final String KEY_DOC_ID = "doc_id";
+    public static final String KEY_DOC_WIDTH_PRO="width_pro";
+    public static final String KEY_DOC_HEIGHT_PRO="height_pro";
+    public static final String KEY_DOC_WIDTH_LAN="width_lan";
+    public static final String KEY_DOC_HEIGHT_LAN="height_lan";
 
-    EditText etBroid, etLss, etVod, etInav, etChat,etDoc,etToken;
+    EditText etBroid, etLss, etVod, etInav, etChat, etDoc, etToken,appId;
     RadioGroup rg;
     RadioButton rbSd, rbHd, rbUhd;
     TextView etPix;
@@ -59,15 +64,17 @@ public class ConfigActivity extends Activity {
         etChat = findViewById(R.id.edt_ch_room_id);
         etDoc = findViewById(R.id.edt_doc_id);
         etToken = findViewById(R.id.edt_token);
+        appId = findViewById(R.id.appId);
 
         sp = this.getSharedPreferences("config", MODE_PRIVATE);
         etBroid.setText(sp.getString(KEY_BROADCAST_ID, ""));
-        etToken.setText(sp.getString(KEY_TOKEN,""));
-        etDoc.setText(sp.getString(KEY_DOC_ID,""));
-        etChat.setText(sp.getString(KEY_CHAT_ID,""));
-        etLss.setText(sp.getString(KEY_LSS_ID,""));
-        etVod.setText(sp.getString(KEY_VOD_ID,""));
-        etInav.setText(sp.getString(KEY_INAV_ID,""));
+        etToken.setText(sp.getString(KEY_TOKEN, ""));
+        etDoc.setText(sp.getString(KEY_DOC_ID, ""));
+        etChat.setText(sp.getString(KEY_CHAT_ID, ""));
+        etLss.setText(sp.getString(KEY_LSS_ID, ""));
+        etVod.setText(sp.getString(KEY_VOD_ID, ""));
+        etInav.setText(sp.getString(KEY_INAV_ID, ""));
+        appId.setText(sp.getString(KEY_APP_ID, ""));
 
         int pix = sp.getInt(KEY_PIX_TYPE, 0);//0sd 1hd 2uhd
         showParams(pix);
@@ -93,12 +100,13 @@ public class ConfigActivity extends Activity {
                 SharedPreferences.Editor editor = sp.edit();
                 editor.putString(KEY_BROADCAST_ID, etBroid.getText().toString());
                 editor.putInt(KEY_PIX_TYPE, i);
-                editor.putString(KEY_TOKEN,etToken.getText().toString().trim());
-                editor.putString(KEY_LSS_ID,etLss.getText().toString().trim());
-                editor.putString(KEY_VOD_ID,etVod.getText().toString().trim());
-                editor.putString(KEY_INAV_ID,etInav.getText().toString().trim());
-                editor.putString(KEY_CHAT_ID,etChat.getText().toString().trim());
-                editor.putString(KEY_DOC_ID,etDoc.getText().toString().trim());
+                editor.putString(KEY_TOKEN, etToken.getText().toString().trim());
+                editor.putString(KEY_LSS_ID, etLss.getText().toString().trim());
+                editor.putString(KEY_VOD_ID, etVod.getText().toString().trim());
+                editor.putString(KEY_INAV_ID, etInav.getText().toString().trim());
+                editor.putString(KEY_CHAT_ID, etChat.getText().toString().trim());
+                editor.putString(KEY_DOC_ID, etDoc.getText().toString().trim());
+                editor.putString(KEY_APP_ID, appId.getText().toString().trim());
 
                 editor.commit();
                 finish();

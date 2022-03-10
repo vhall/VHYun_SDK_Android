@@ -75,10 +75,41 @@
         android:text="互动直播" />
 
     <Button
+        android:id="@+id/screen_interactive"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showScreenRecordInteractive"
+        android:text="录屏互动直播" />
+    <Button
+        android:id="@+id/nodelay_live"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showNodelayLive"
+        android:text="无延迟直播" />
+    <Button
         android:id="@+id/btn_screen_record"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="showScreenRecord"
         android:text="录屏直播" />
+    <Button
+        android:id="@+id/btn_ui_vod"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showUiVod"
+        android:text="皮肤录播" />
+    <Button
+        android:id="@+id/btn_ui_lss"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showUiLss"
+        android:text="皮肤直播" />
+
+    <Button
+        android:id="@+id/btn_show_upload"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="showUpload"
+        android:text="视频上传" />
 
 </LinearLayout>

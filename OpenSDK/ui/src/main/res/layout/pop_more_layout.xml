@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/pop_bg">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="25dp"
+            android:text="播放设置"
+            android:textColor="@color/white"
+            android:textSize="15sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="10dp"
+            android:background="#979797" />
+
+        <RelativeLayout
+            android:id="@+id/ll_circulation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="循环播放"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+
+            <Switch
+                android:id="@+id/circulation"
+                android:layout_width="45dp"
+                android:layout_height="22dp"
+                android:layout_alignParentEnd="true"
+                android:thumb="@drawable/switch_custom_thumb"
+                android:track="@drawable/switch_track_control" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="35dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/svg_ic_voice_small" />
+
+            <SeekBar
+                android:id="@+id/seek_bar_voice"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:focusable="true"
+                android:indeterminate="false"
+                android:maxHeight="1dp"
+                android:minHeight="1dp"
+                android:progressDrawable="@drawable/po_seek_bar"
+                android:thumb="@drawable/point_withe"
+                android:thumbOffset="0dip" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/svg_ic_voice_big" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="35dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginEnd="5dp"
+                android:background="@drawable/svg_iv_light" />
+
+            <SeekBar
+                android:id="@+id/seek_bar_light"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:focusable="true"
+                android:indeterminate="false"
+                android:maxHeight="1dp"
+                android:minHeight="1dp"
+                android:progressDrawable="@drawable/po_seek_bar"
+                android:thumb="@drawable/point_withe"
+                android:thumbOffset="0dip" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/svg_iv_light" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

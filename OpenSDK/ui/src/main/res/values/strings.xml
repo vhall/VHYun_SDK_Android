@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">VOD</string>
+    <string name="play_circulation">循环播放</string>
+    <string name="play_setting">播放设置</string>
+</resources>

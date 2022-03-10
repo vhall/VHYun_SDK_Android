@@ -2,7 +2,6 @@ package com.vhall.opensdk.im;
 
 import android.app.Activity;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -15,20 +14,21 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vhall.framework.VhallSDK;
 import com.vhall.framework.connect.VhallConnectService;
 import com.vhall.ims.VHIM;
 import com.vhall.lss.play.VHLivePlayer;
 import com.vhall.message.ConnectServer;
 import com.vhall.opensdk.R;
+import com.vhall.opensdk.util.KeyBoardManager;
+import com.vhall.opensdk.widget.ChangeUserInfoDialog;
 import com.vhall.player.Constants;
 import com.vhall.player.VHPlayerListener;
 import com.vhall.player.stream.play.impl.VHVideoPlayerView;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -56,6 +56,7 @@ public class IMActivity extends Activity {
     private VHVideoPlayerView mVideoPlayer;
     private ProgressBar mLoadingPB;
     private ImageView mPlayBtn;
+    private ChangeUserInfoDialog dialog;
 
 
     @Override
@@ -105,6 +106,13 @@ public class IMActivity extends Activity {
 
     }
 
+    public void updateUserInfo(View view) {
+        if(dialog == null){
+            dialog = new ChangeUserInfoDialog(this);
+        }
+        dialog.show();
+    }
+
     class MyListener implements VHPlayerListener {
 
         @Override
@@ -118,11 +126,9 @@ public class IMActivity extends Activity {
                     mLoadingPB.setVisibility(View.VISIBLE);
                     break;
                 case STOP:
+                case END:
                     mLoadingPB.setVisibility(View.GONE);
                     mPlayBtn.setImageResource(R.mipmap.icon_start_bro);
-                    break;
-                case END:
-
                     break;
 
             }
@@ -145,13 +151,22 @@ public class IMActivity extends Activity {
                 case Constants.Event.EVENT_VIDEO_SIZE_CHANGED:
                     break;
                 case Constants.Event.EVENT_STREAM_START://发起端发起
-
+//                    if (mPlayer.isPlaying()) {
+//                        return;
+//                    }
+//                    Toast.makeText(IMActivity.this, "主播开始推流", Toast.LENGTH_SHORT).show();
+//                    if (mPlayer.resumeAble())
+//                        mPlayer.resume();
                     break;
                 case Constants.Event.EVENT_STREAM_STOP://发起端停止
-
+//                    if (!mPlayer.isPlaying()) {
+//                        return;
+//                    }
+//                    Toast.makeText(IMActivity.this, "主播停止推流", Toast.LENGTH_SHORT).show();
+//                    mPlayer.pause();
                     break;
                 case Constants.Event.EVENT_NO_STREAM://暂未开始直播
-
+//                    Toast.makeText(IMActivity.this, "主播端暂未推流", Toast.LENGTH_SHORT).show();
                     break;
             }
 
@@ -215,14 +230,17 @@ public class IMActivity extends Activity {
         @Override
         public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
             if (actionId == EditorInfo.IME_ACTION_SEND) {
-                im.sendMsg(v.getText().toString(), new VHIM.Callback() {
+                im.sendMsg(v.getText().toString(),VHIM.TYPE_TEXT,buildContext(), new VHIM.Callback() {
                     @Override
                     public void onSuccess() {
+                        et.setText("");
+                        KeyBoardManager.closeKeyboard(et,IMActivity.this);
                         Log.i("IMACt", "success");
                     }
 
                     @Override
                     public void onFailure(int errorCode, String errorMsg) {
+                        KeyBoardManager.closeKeyboard(et,IMActivity.this);
                         Log.e("imact", "errorCode:" + errorCode + "&errorMsg:" + errorMsg);
                         Toast.makeText(IMActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
                     }
@@ -232,10 +250,26 @@ public class IMActivity extends Activity {
         }
     }
 
+
+    private String buildContext(){
+        String userInfo = VhallSDK.getInstance().getmUserInfo();
+        JSONObject context = new JSONObject();
+        try {
+            if(!TextUtils.isEmpty(userInfo)){
+                context = new JSONObject(userInfo);
+            }
+            context.put("txt","test");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return context.toString();
+    }
+
     class MsgListener implements VHIM.OnMessageListener {
 
         @Override
         public void onMessage(String msg) {
+            Log.e("vhall_ImA",msg);
             try {
                 JSONObject text = new JSONObject(msg);
                 String service_type = text.optString("service_type");//服务类型
@@ -268,6 +302,11 @@ public class IMActivity extends Activity {
                 e.printStackTrace();
             }
         }
+
+        @Override
+        public void onChannelStatus(String msg) {
+
+        }
     }
 
     private void addView(String event, String nick_name, String data, String time, String avatar) {
@@ -277,9 +316,9 @@ public class IMActivity extends Activity {
             View removeView = ll_content.getChildAt(0);
             ll_content.removeView(removeView);
         }
-        if (!TextUtils.isEmpty(avatar) && !avatar.equals("null")) {
-            requestAvatar(avatar, v);
-        }
+//        if (!TextUtils.isEmpty(avatar) && !avatar.equals("null")) {
+//            requestAvatar(avatar, v);
+//        }
         TextView c = view.findViewById(R.id.content);
         TextView t = view.findViewById(R.id.time);
         if (event.equals(VHIM.TYPE_CUSTOM)) {

@@ -24,7 +24,7 @@
                 android:id="@+id/et_broid"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:hint="旁路ID（互动直播推旁路配置项）" />
+                android:hint="旁路ID（互动直播推旁路配置项 直播id lss）" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -82,6 +82,26 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:padding="5dp"
+                    android:text="appId:" />
+
+                <EditText
+                    android:id="@+id/appId"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:padding="5dp"
+                    android:text="" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="5dp"
                     android:text="token:" />
 
                 <EditText
@@ -90,7 +110,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:padding="5dp"
-                    android:text="vhall" />
+                    android:text="" />
             </LinearLayout>
 
             <LinearLayout
@@ -111,10 +131,7 @@
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:hint="lssRoomId"
-                    android:padding="5dp"
-                    android:text="" />
-
-
+                    android:padding="5dp" />
             </LinearLayout>
 
             <LinearLayout
@@ -134,8 +151,7 @@
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:hint="vodRoomId"
-                    android:padding="5dp"
-                    android:text="" />
+                    android:padding="5dp" />
             </LinearLayout>
 
             <LinearLayout
@@ -156,10 +172,7 @@
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:hint="chRoomId"
-                    android:padding="5dp"
-                    android:text="" />
-
-
+                    android:padding="5dp" />
             </LinearLayout>
 
             <LinearLayout
@@ -179,8 +192,7 @@
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:hint="inavRoomId"
-                    android:padding="5dp"
-                    android:text="" />
+                    android:padding="5dp" />
             </LinearLayout>
 
             <LinearLayout
@@ -200,9 +212,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center_vertical"
-                    android:hint="docId"
-                    android:padding="5dp"
-                    android:text="" />
+                    android:hint="chRoomId"
+                    android:padding="5dp" />
             </LinearLayout>
 
             <Button
