@@ -25,7 +25,7 @@ public class ScreenService extends VHScreenRecordService {
         String CHANNEL_ONE_NAME = "vhall screenRecord";
         NotificationChannel notificationChannel = null;
         Notification.Builder builder = new Notification.Builder(this);
-        if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             notificationChannel = new NotificationChannel(CHANNEL_ONE_ID, CHANNEL_ONE_NAME, NotificationManager.IMPORTANCE_HIGH);
             NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             manager.createNotificationChannel(notificationChannel);

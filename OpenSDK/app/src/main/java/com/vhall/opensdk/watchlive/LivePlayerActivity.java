@@ -122,8 +122,6 @@ public class LivePlayerActivity extends Activity {
         }
 
         accessToken = getIntent().getStringExtra("token");
-//        roomId = "lss_772f6eda";
-//        accessToken = "vhall";
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.player_layout);
         ll_urls = this.findViewById(R.id.ll_urls);
@@ -448,7 +446,7 @@ public class LivePlayerActivity extends Activity {
 
     //TODO 投屏相关
 //    ------------------------------------------------------投屏相关--------------------------------------------------
-    private LivePlayerActivity.BrowseRegistryListener registryListener = new LivePlayerActivity.BrowseRegistryListener();
+    private BrowseRegistryListener registryListener = new BrowseRegistryListener();
     private DevicePopu devicePopu;
     private AndroidUpnpService upnpService;
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -519,7 +517,7 @@ public class LivePlayerActivity extends Activity {
                 public void run() {
                     if (devicePopu == null) {
                         devicePopu = new DevicePopu(LivePlayerActivity.this);
-                        devicePopu.setOnItemClickListener(new LivePlayerActivity.OnItemClick());
+                        devicePopu.setOnItemClickListener(new OnItemClick());
                     }
                     devicePopu.deviceAdded(device);
                 }
@@ -532,7 +530,7 @@ public class LivePlayerActivity extends Activity {
                 public void run() {
                     if (devicePopu == null) {
                         devicePopu = new DevicePopu(LivePlayerActivity.this);
-                        devicePopu.setOnItemClickListener(new LivePlayerActivity.OnItemClick());
+                        devicePopu.setOnItemClickListener(new OnItemClick());
                     }
                     devicePopu.deviceRemoved(device);
                 }
@@ -563,7 +561,7 @@ public class LivePlayerActivity extends Activity {
     public void showDevices() {
         if (devicePopu == null) {
             devicePopu = new DevicePopu(this);
-            devicePopu.setOnItemClickListener(new LivePlayerActivity.OnItemClick());
+            devicePopu.setOnItemClickListener(new OnItemClick());
         }
         devicePopu.showAtLocation(getWindow().getDecorView().findViewById(android.R.id.content), Gravity.CENTER, 0, 0);
     }

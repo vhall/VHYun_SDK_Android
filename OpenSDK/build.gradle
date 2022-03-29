@@ -7,7 +7,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath 'com.android.tools.build:gradle:4.2.1'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -16,9 +16,13 @@ buildscript {
 
 allprojects {
     repositories {
+        mavenCentral()
         maven{ url 'https://maven.aliyun.com/repository/central'}
         maven {url 'http://4thline.org/m2'}
         google()
+        maven {
+            url 'http://maven.faceunity.com/repository/maven-public/'
+        }
         jcenter()
     }
 }

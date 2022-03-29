@@ -1,8 +1,9 @@
 
 package com.vhall.opensdk;
 
+import static android.Manifest.permission.READ_PHONE_STATE;
+
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,8 +15,8 @@ import android.view.View;
 import android.webkit.WebView;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.Toast;
 
-import com.vhall.document.DocumentView;
 import com.vhall.framework.VhallSDK;
 import com.vhall.jni.VhallLiveApi;
 import com.vhall.logmanager.L;
@@ -24,8 +25,6 @@ import com.vhall.opensdk.util.SpUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import static android.Manifest.permission.READ_PHONE_STATE;
 
 /**
  * Created by Hank on 2018/3/9.
@@ -39,6 +38,8 @@ public class SplashActivity extends AppCompatActivity {
     CheckBox checkBox;
     private String userId;
 
+    EditText mEditNickName;
+    EditText mEditAvatar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,11 +49,14 @@ public class SplashActivity extends AppCompatActivity {
         userId = SpUtils.share().getUserId();
         mEditAppid = this.findViewById(R.id.et_appid);
         mEditUserid = this.findViewById(R.id.et_userid);
+        mEditNickName = this.findViewById(R.id.et_nickname);
+        mEditAvatar = this.findViewById(R.id.et_avatar);
         mEditAppid.setText(SpUtils.share().getAppId());
         mEditUserid.setText(userId);
+        mEditNickName.setText(SpUtils.share().getNickName());
+        mEditAvatar.setText(SpUtils.share().getAvatar());
         checkBox = findViewById(R.id.cb_env);
         getPermission();
-
     }
 
     //初始化SDK需要读取手机信息做信息统计，如果取不到权限，信息为空，不影响SDK使用
@@ -77,33 +81,48 @@ public class SplashActivity extends AppCompatActivity {
 
         String appid = mEditAppid.getText().toString();
         String userid = mEditUserid.getText().toString();
+        String nickName = mEditNickName.getText().toString();
+        String avatar = mEditAvatar.getText().toString();
         SpUtils.share().commitStr("userId",userid);
         SpUtils.share().commitStr(ConfigActivity.KEY_APP_ID,appid);
         if (!TextUtils.isEmpty(appid)) {
             if (checkBox.isChecked()) {
-                //正式环境
                 VhallSDK.getInstance().setLogLevel(L.LogLevel.FULL);
-//                VhallSDK.getInstance().setPackageCheck("com.vhallsaas.sdk","241A634279A943313DCF69893E5B079A");
                 VhallSDK.getInstance().init(getApplicationContext(), appid, userid);//初始化成功会打印日志：初始化成功！，请确保注册的appid与当前应用包名签名一致
-//                DocumentView.setHost("https://static.vhallyun.com/jssdk/doc-sdk/dist/release/mobile.html");
             } else {
                 VhallSDK.getInstance().setLogLevel(L.LogLevel.FULL);
-                //测试环境
-//                VhallSDK.getInstance().setPackageCheck("com.vhallsaas.sdk","241A634279A943313DCF69893E5B079A");
-                //test-api.vhallyun.com
-                //t-open.e.vhall.com
                 VhallSDK.getInstance().init(getApplicationContext(), appid, userid, "test-api.vhallyun.com");//初始化成功会打印日志：初始化成功！，请确保注册的appid与当前应用包名签名一致
-//                DocumentView.setHost("https://t-static01-open.e.vhall.com/jssdk/doc-sdk/dist/dev/mobile.html");
-//                DocumentView.setHost("https://t-static01-open.e.vhall.com/jssdk/doc-sdk/dist/dev/mobile1.1.9.html");
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                     WebView.setWebContentsDebuggingEnabled(true);
                 }
                 LogReporter.getInstance().setDebug(true);
                 VhallLiveApi.EnableDebug(true);
-
             }
+
+            JSONObject obj = new JSONObject();
+            try {
+                if (!TextUtils.isEmpty(userid)) {
+                    obj.put("third_party_user_id", userid);
+                }
+                if (!TextUtils.isEmpty(nickName)) {
+                    SpUtils.share().commitStr("nickname",nickName);
+                    obj.put("nickName", nickName);
+                    obj.put("nick_name", nickName);
+                }
+                if (!TextUtils.isEmpty(avatar)) {
+                    SpUtils.share().commitStr("avatar",avatar);
+                    obj.put("avatar", avatar);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            VhallSDK.getInstance().setUserInfo(obj.toString());
+
             Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+            intent.putExtra("selfId",mEditUserid.getText().toString());
             startActivity(intent);
+        } else {
+            Toast.makeText(getApplicationContext(), "appid不能为空", Toast.LENGTH_LONG).show();
         }
     }
 }

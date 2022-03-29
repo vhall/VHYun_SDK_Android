@@ -1,48 +1,5 @@
 package com.vhall.opensdk;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.text.TextUtils;
-import android.util.Base64;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.vhall.framework.VhallSDK;
-import com.vhall.httpclient.utils.OKHttpUtils;
-import com.vhall.opensdk.document.DocActivity;
-import com.vhall.opensdk.document.UploadDocumentActivity;
-import com.vhall.opensdk.im.IMActivity;
-import com.vhall.opensdk.interactive.InteractiveActivity;
-import com.vhall.opensdk.push.PushActivity;
-import com.vhall.opensdk.screenRecord.ScreenRecordActivity;
-import com.vhall.opensdk.upload.UploadActivity;
-import com.vhall.opensdk.util.SpUtils;
-import com.vhall.opensdk.watchlive.LivePlayerActivity;
-import com.vhall.opensdk.watchlive.LivePlayerUiActivity;
-import com.vhall.opensdk.watchplayback.VodPlayerActivity;
-import com.vhall.opensdk.watchplayback.VodPlayerUiActivity;
-import com.vhall.player.AsyncHttpsURLConnection;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
 import static android.Manifest.permission.CAMERA;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -51,6 +8,42 @@ import static com.vhall.opensdk.ConfigActivity.KEY_INAV_ID;
 import static com.vhall.opensdk.ConfigActivity.KEY_LSS_ID;
 import static com.vhall.opensdk.ConfigActivity.KEY_TOKEN;
 import static com.vhall.opensdk.ConfigActivity.KEY_VOD_ID;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
+
+import com.vhall.beautify.IVHBeautifyInitListener;
+import com.vhall.beautify.VHBeautifyKit;
+import com.vhall.framework.VhallBaseSDK;
+import com.vhall.framework.VhallSDK;
+import com.vhall.opensdk.document.DocActivity;
+import com.vhall.opensdk.document.UploadDocumentActivity;
+import com.vhall.opensdk.im.IMActivity;
+import com.vhall.opensdk.interactive.InteractiveActivity;
+import com.vhall.opensdk.push.PushActivity;
+import com.vhall.opensdk.push.PushWithBeautifyActivity;
+import com.vhall.opensdk.push.PushWithIMActivity;
+import com.vhall.opensdk.screenRecord.ScreenRecordActivity;
+import com.vhall.opensdk.upload.UploadActivity;
+import com.vhall.opensdk.util.SpUtils;
+import com.vhall.opensdk.watchlive.LivePlayerActivity;
+import com.vhall.opensdk.watchlive.LivePlayerUiActivity;
+import com.vhall.opensdk.watchlive.TimeShiftPlayerActivity;
+import com.vhall.opensdk.watchplayback.VodPlayerActivity;
+import com.vhall.opensdk.watchplayback.VodPlayerDocActivity;
+import com.vhall.opensdk.watchplayback.VodPlayerUiActivity;
 
 /**
  * Created by Hank on 2017/12/8.
@@ -89,13 +82,47 @@ public class MainActivity extends Activity {
             }
         });
         chatId = SpUtils.share().getChatId();
+        token = sp.getString(KEY_TOKEN, "");
+        initBeautifySDK();
     }
 
-    public void push(View view) {
+    private void initBeautifySDK() {
+        VhallBaseSDK.getInstance().initBeautify(token, new IVHBeautifyInitListener() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "美颜sdk:" + VHBeautifyKit.getInstance().sdkModel() + "初始化成功", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onError(int errCode, String errMsg) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, errCode + " - " + errMsg, Toast.LENGTH_SHORT).show());
+            }
+        });
+    }
+
+    public void pushOnly(View view) {
         chatId = SpUtils.share().getChatId();
         roomid = sp.getString(KEY_LSS_ID, "");
         if (getPushPermission(REQUEST_PUSH)) {
             Intent intent = new Intent(this, PushActivity.class);
+            startAct(intent);
+        }
+    }
+
+    public void pushWithIM(View view) {
+        chatId = SpUtils.share().getChatId();
+        roomid = sp.getString(KEY_LSS_ID, "");
+        if (getPushPermission(REQUEST_PUSH)) {
+            Intent intent = new Intent(this, PushWithIMActivity.class);
+            startAct(intent);
+        }
+    }
+
+    public void pushWithBeautify(View view) {
+        chatId = SpUtils.share().getChatId();
+        roomid = sp.getString(KEY_LSS_ID, "");
+        if (getPushPermission(REQUEST_PUSH)) {
+            Intent intent = new Intent(this, PushWithBeautifyActivity.class);
             startAct(intent);
         }
     }
@@ -107,7 +134,7 @@ public class MainActivity extends Activity {
         startAct(intent);
     }
 
-    //观看回放需要下载、保存和读取文档信息
+
     public void playvod(View view) {
         chatId = SpUtils.share().getChatId();
         roomid = sp.getString(KEY_VOD_ID, "");
@@ -115,7 +142,23 @@ public class MainActivity extends Activity {
             Intent intent = new Intent(this, VodPlayerActivity.class);
             startAct(intent);
         }
+    }
 
+    //观看回放需要下载、保存和读取文档信息
+    public void playdocvod(View view) {
+        chatId = SpUtils.share().getChatId();
+        roomid = sp.getString(KEY_VOD_ID, "");
+        if (getStoragePermission()) {
+            Intent intent = new Intent(this, VodPlayerDocActivity.class);
+            startAct(intent);
+        }
+    }
+
+    public void timeshift(View view) {
+        chatId = SpUtils.share().getChatId();
+        roomid = sp.getString(KEY_LSS_ID, "");
+        Intent intent = new Intent(this, TimeShiftPlayerActivity.class);
+        startAct(intent);
     }
 
     //需要文件读取权限
@@ -151,6 +194,15 @@ public class MainActivity extends Activity {
         }
     }
 
+    public void showInteractiveBeautify(View view) {
+        roomid = sp.getString(KEY_INAV_ID, "");
+        if (getPushPermission(REQUEST_INTERACTIVE)) {
+            Intent intent = new Intent(this, InteractiveActivity.class);
+            intent.putExtra("beautify", true);
+            startAct(intent);
+        }
+    }
+
     public void showScreenRecordInteractive(View view) {
         roomid = sp.getString(KEY_INAV_ID, "");
         if (getPushPermission(REQUEST_INTERACTIVE)) {
@@ -159,13 +211,15 @@ public class MainActivity extends Activity {
             startAct(intent);
         }
     }
+
     //无延时直播 只订阅无推流
     public void showNodelayLive(View view) {
         roomid = sp.getString(KEY_INAV_ID, "");
         Intent intent = new Intent(this, InteractiveActivity.class);
-        intent.putExtra("type",InteractiveActivity.NODELAY_LIVE);
+        intent.putExtra("type", InteractiveActivity.NODELAY_LIVE);
         startAct(intent);
     }
+
     public void showScreenRecord(View view) {
         roomid = sp.getString(KEY_LSS_ID, "");
         if (getAudioRecordPermission()) {
@@ -284,10 +338,9 @@ public class MainActivity extends Activity {
     }
 
     private void startAct(Intent intent) {
-        token = sp.getString(KEY_TOKEN, "");
         if (TextUtils.isEmpty(roomid) || TextUtils.isEmpty(token)) {
-            Toast.makeText(getApplicationContext(), "roomid/token为空", Toast.LENGTH_LONG).show();
-            return;
+            Toast.makeText(getApplicationContext(), "roomid/token为空，", Toast.LENGTH_LONG).show();
+//            return;
         }
         if (roomid.contains(",")) {
             String[] data = roomid.split(",");

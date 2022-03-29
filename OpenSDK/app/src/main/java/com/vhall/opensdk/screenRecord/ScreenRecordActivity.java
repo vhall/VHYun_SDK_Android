@@ -80,6 +80,7 @@ public class ScreenRecordActivity extends Activity {
         bindService(serviceIntent, connection, BIND_AUTO_CREATE);
 
         config = new VHLivePushConfig(VHLivePushFormat.PUSH_MODE_XHD);
+        config.encodeColorFormat = VHLivePushFormat.ENCODE_COLOR_FORMAT_YUV420SP_NV21;
         config.encodeType = VHLivePushFormat.ENCODE_TYPE_SOFT;
         config.screenOri = VHLivePushFormat.SCREEN_ORI_LANDSPACE;
         config.videoBitrate = 800 * 1000;

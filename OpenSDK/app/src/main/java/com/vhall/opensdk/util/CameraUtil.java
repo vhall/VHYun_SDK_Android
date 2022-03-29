@@ -1,7 +1,7 @@
 package com.vhall.opensdk.util;
 
-import org.webrtc.Camera1Enumerator;
-import org.webrtc.CameraEnumerationAndroid;
+import org.vhwebrtc.Camera1Enumerator;
+import org.vhwebrtc.CameraEnumerationAndroid;
 
 import java.util.List;
 

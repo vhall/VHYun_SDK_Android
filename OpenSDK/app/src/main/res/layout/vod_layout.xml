@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical">
 
     <RelativeLayout
@@ -83,16 +84,6 @@
                 android:visibility="gone" />
 
         </RelativeLayout>
-
-        <RadioGroup
-            android:id="@+id/rg_dpi"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:orientation="horizontal">
-
-        </RadioGroup>
-
 
         <ImageView
             android:id="@+id/iv_about_speed"
@@ -197,6 +188,13 @@
             android:text="FreeSeek"
             android:textColor="#5fffffff" />
 
+        <RadioGroup
+            android:id="@+id/rg_dpi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/switch_free_seek"
+            android:orientation="horizontal" />
+
         <TextView
             android:id="@+id/tv_scale_type"
             android:layout_width="wrap_content"
@@ -206,7 +204,6 @@
             android:padding="5dp"
             android:text="fitXY"
             android:textColor="#ffffff" />
-
 
         <RadioGroup
             android:id="@+id/rg_water_mark_gravity"
@@ -263,6 +260,8 @@
         android:id="@+id/rl_tool_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:visibility="gone"
+        tools:visibility="visible"
         android:layout_weight="2">
 
         <!--<com.vhall.document.DocumentView

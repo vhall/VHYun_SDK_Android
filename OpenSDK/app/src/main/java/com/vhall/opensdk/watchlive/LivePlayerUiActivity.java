@@ -1,7 +1,6 @@
 package com.vhall.opensdk.watchlive;
 
 import android.app.Activity;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
@@ -11,7 +10,6 @@ import com.vhall.lss.play.VHLivePlayer;
 import com.vhall.opensdk.R;
 import com.vhall.ui.VHLiveUiView;
 import com.vhall.ui.VHUiPlayerLister;
-import com.vhall.vod.VHVodPlayer;
 
 /**
  * @author hkl

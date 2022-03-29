@@ -3,15 +3,18 @@
     package="com.vhall.opensdk">
 
     <application
+        android:name=".VhallApplication"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme"
-        android:name=".VhallApplication"
-        >
+        android:usesCleartextTraffic="true">
+        <activity
+            android:name=".watchlive.TimeShiftPlayerActivity"
+            android:configChanges="keyboardHidden|screenSize|orientation"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".watchplayback.VodPlayerUiActivity"
             android:configChanges="keyboardHidden|screenSize|orientation"
@@ -40,7 +43,16 @@
             android:name=".push.PushActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".push.PushWithIMActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".push.PushWithBeautifyActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".watchplayback.VodPlayerActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
+        <activity
+            android:name=".watchplayback.VodPlayerDocActivity"
             android:configChanges="orientation|keyboardHidden|screenSize" />
         <activity
             android:name=".document.DocActivity"
@@ -56,6 +68,8 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".interactive.InteractiveActivity"
+
+            android:screenOrientation="portrait"
             android:configChanges="keyboardHidden|screenSize|orientation" />
 
         <activity
@@ -65,7 +79,6 @@
         <activity
             android:name=".screenRecord.ScreenRecordActivity"
             android:launchMode="singleTask" />
-
         <service android:name=".screenRecord.ScreenService" /> <!-- 文档上传使用 -->
         <provider
             android:name="android.support.v4.content.FileProvider"
@@ -79,8 +92,7 @@
 
         <service android:name=".interactive.screenrecord.ScreenRecordService"
             android:enabled="true"
-            android:exported="false"
-            ></service>
+            android:exported="false" />
     </application>
 
 </manifest>

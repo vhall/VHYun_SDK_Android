@@ -1,6 +1,9 @@
 package com.vhall.opensdk.interactive;
 
 
+import static android.content.Context.MEDIA_PROJECTION_SERVICE;
+import static com.vhall.opensdk.ConfigActivity.KEY_PIX_TYPE;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -12,7 +15,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.UiThread;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,12 +30,16 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.vhall.beautify.VHBeautifyKit;
+import com.vhall.beautifykit.control.FaceBeautyControlView;
 import com.vhall.ilss.VHInteractive;
 import com.vhall.opensdk.ConfigActivity;
 import com.vhall.opensdk.R;
+import com.vhall.opensdk.beautysource.FaceBeautyDataFactory;
 import com.vhall.opensdk.util.ListUtil;
 import com.vhall.vhallrtc.client.Room;
 import com.vhall.vhallrtc.client.Stream;
@@ -42,8 +48,7 @@ import com.vhall.vhallrtc.client.VHRenderView;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.webrtc.RendererCommon;
-import org.webrtc.SurfaceViewRenderer;
+import org.vhwebrtc.SurfaceViewRenderer;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -54,9 +59,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
-
-import static android.content.Context.MEDIA_PROJECTION_SERVICE;
-import static com.vhall.opensdk.ConfigActivity.KEY_PIX_TYPE;
 
 public class InteractiveFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "InteractiveFragment";
@@ -92,6 +94,9 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     int changePosition = -1;
     String[] scaleText = {"fit", "fill", "none"};
     int scaleType = 0;
+    private FaceBeautyControlView mFaceBeautyControlView;
+    private FaceBeautyDataFactory mFaceBeautyDataFactory;
+    private boolean useBeautify = false;
 
     private MediaProjectionManager mediaProjectionManager = null;
 
@@ -140,13 +145,14 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         return fragment;
     }
 
-
     @Override
     public void onAttach(Context context) {
         mContext = context;
         super.onAttach(context);
+        if (context instanceof InteractiveActivity) {
+            useBeautify = ((InteractiveActivity) context).getIntent().getBooleanExtra("beautify", false);
+        }
     }
-
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -274,13 +280,24 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         public void onDidPublishStream(Room room, Stream stream) {//上麦
             Log.i(TAG, "onDidPublishStream");
             isOnline = true;
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mContext, "上麦成功", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         @Override
         public void onDidUnPublishStream(Room room, Stream stream) {//下麦
             Log.i(TAG, "onDidUnPublishStream");
             isOnline = false;
-
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(mContext, "下麦成功", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
         @Override
@@ -657,6 +674,11 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mInfoBtn = getView().findViewById(R.id.iv_info);
         mOnlineTV = getView().findViewById(R.id.tv_online);
         btnScreen = getView().findViewById(R.id.btn_screen_record);
+        Switch beautifySwitch = getView().findViewById(R.id.switch_beautify);
+        beautifySwitch.setVisibility(useBeautify ? View.VISIBLE : View.GONE);
+        beautifySwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            switchBeautifyState(isChecked);
+        });
 //无延迟直播
         if(isNodelayLiveAudience){
             localView.setVisibility(View.GONE);
@@ -757,7 +779,42 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                 }
             }
         });*/
+
+        Log.d(TAG, ">>>" + VHBeautifyKit.getInstance().isBeautifyEnable());
+        initBeautifyData();
+        VHBeautifyKit.getInstance().setFaceDetectionListener(faceNum -> Log.d(TAG, ">>>faceNum = " + faceNum));
     }
+
+    private void initBeautifyData() {
+        mFaceBeautyControlView = getView().findViewById(R.id.faceBeautyControlView);
+        mFaceBeautyControlView.setVisibility(useBeautify ? View.VISIBLE : View.GONE);
+        if (useBeautify) {
+            mFaceBeautyDataFactory = new FaceBeautyDataFactory(mFaceBeautyListener);
+            mFaceBeautyControlView.bindDataFactory(mFaceBeautyDataFactory);
+            mFaceBeautyControlView.setOnBottomAnimatorChangeListener(showRate -> {
+            });
+        }
+    }
+
+    private void switchBeautifyState(boolean enable) {
+        if (null != localStream) {
+            VHBeautifyKit.getInstance().setBeautifyEnable(enable);
+            localStream.setEnableBeautify(false);//关闭默认美颜
+        }
+    }
+
+    FaceBeautyDataFactory.FaceBeautyListener mFaceBeautyListener = new FaceBeautyDataFactory.FaceBeautyListener() {
+
+        @Override
+        public void onFilterSelected(int res) {
+            Toast.makeText(requireContext(), getString(res), Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onFaceBeautyEnable(boolean enable) {
+            switchBeautifyState(enable);
+        }
+    };
 
     /**
      * @param event

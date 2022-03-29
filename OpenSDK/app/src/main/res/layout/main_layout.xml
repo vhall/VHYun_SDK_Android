@@ -24,92 +24,156 @@
             android:text="设置" />
     </RelativeLayout>
 
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp">
 
-    <Button
-        android:id="@+id/btn_push"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="push"
-        android:text="发直播+聊天" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/btn_doc"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="showDoc"
-        android:text="文档发直播" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btn_play_live"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="playlive"
-        android:text="看文档直播" />
+                <Button
+                    android:id="@+id/btn_pushonly"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="pushOnly"
+                    android:text="发直播" />
 
-    <Button
-        android:id="@+id/btn_play_vod"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="playvod"
-        android:text="看文档录播" />
-    <Button
-        android:id="@+id/btn_upload_document"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="uploadDocument"
-        android:text="上传文档"/>
+                <Button
+                    android:id="@+id/btn_push"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="pushWithIM"
+                    android:text="发直播+聊天" />
+
+                <Button
+                    android:id="@+id/btn_push_beautify"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="pushWithBeautify"
+                    android:text="发直播+美颜" />
+
+                <Button
+                    android:id="@+id/btn_doc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showDoc"
+                    android:text="文档发直播" />
+
+                <Button
+                    android:id="@+id/btn_play_live"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="playlive"
+                    android:text="看文档直播" />
+
+                <Button
+                    android:id="@+id/btn_play_vod"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="playvod"
+                    android:text="看录播" />
+
+                <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="playdocvod"
+                    android:text="看文档录播" />
+
+                <Button
+                    android:id="@+id/btn_upload_document"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="uploadDocument"
+                    android:text="上传文档" />
 
 
-    <Button
-        android:id="@+id/btn_im"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="showIM"
-        android:text="聊天+看直播" />
+                <Button
+                    android:id="@+id/btn_im"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showIM"
+                    android:text="聊天+看直播" />
 
-    <Button
-        android:id="@+id/btn_interactive"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="showInteractive"
-        android:text="互动直播" />
+                <Button
+                    android:id="@+id/btn_interactive"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showInteractive"
+                    android:text="互动直播" />
 
-    <Button
-        android:id="@+id/screen_interactive"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="showScreenRecordInteractive"
-        android:text="录屏互动直播" />
-    <Button
-        android:id="@+id/nodelay_live"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="showNodelayLive"
-        android:text="无延迟直播" />
-    <Button
-        android:id="@+id/btn_screen_record"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="showScreenRecord"
-        android:text="录屏直播" />
-    <Button
-        android:id="@+id/btn_ui_vod"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="showUiVod"
-        android:text="皮肤录播" />
-    <Button
-        android:id="@+id/btn_ui_lss"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="showUiLss"
-        android:text="皮肤直播" />
+                <Button
+                    android:id="@+id/btn_interactive_beautify"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showInteractiveBeautify"
+                    android:text="互动直播+美颜" />
 
-    <Button
-        android:id="@+id/btn_show_upload"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="showUpload"
-        android:text="视频上传" />
+                <Button
+                    android:id="@+id/screen_interactive"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showScreenRecordInteractive"
+                    android:text="录屏互动直播" />
 
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingLeft="50dp">
+
+                <Button
+                    android:id="@+id/nodelay_live"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showNodelayLive"
+                    android:text="无延迟直播" />
+
+                <Button
+                    android:id="@+id/btn_screen_record"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showScreenRecord"
+                    android:text="录屏直播" />
+
+                <Button
+                    android:id="@+id/btn_ui_vod"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showUiVod"
+                    android:text="皮肤录播" />
+
+                <Button
+                    android:id="@+id/btn_ui_lss"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showUiLss"
+                    android:text="皮肤直播" />
+
+                <Button
+                    android:id="@+id/btn_show_upload"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showUpload"
+                    android:text="视频上传" />
+
+                <Button
+                    android:id="@+id/btn_play_time_shift"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="timeshift"
+                    android:text="直播时移" />
+
+            </LinearLayout>
+        </LinearLayout>
+    </android.support.v4.widget.NestedScrollView>
 </LinearLayout>

@@ -26,5 +26,7 @@ public class VhallApplication extends Application {
                 }).build();
         VHNetApi.getNetApi().setGlobalConfig(config);
         SpUtils.init(this);
+
+        SpUtils.share().clear();
     }
 }
