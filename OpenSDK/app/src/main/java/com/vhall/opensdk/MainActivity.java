@@ -15,7 +15,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -23,12 +22,14 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.support.annotation.NonNull;
 
 import com.vhall.beautify.IVHBeautifyInitListener;
 import com.vhall.beautify.VHBeautifyKit;
 import com.vhall.framework.VhallBaseSDK;
 import com.vhall.framework.VhallSDK;
 import com.vhall.opensdk.document.DocActivity;
+import com.vhall.opensdk.document.DocLiveActivity;
 import com.vhall.opensdk.document.UploadDocumentActivity;
 import com.vhall.opensdk.im.IMActivity;
 import com.vhall.opensdk.interactive.InteractiveActivity;
@@ -38,7 +39,10 @@ import com.vhall.opensdk.push.PushWithIMActivity;
 import com.vhall.opensdk.screenRecord.ScreenRecordActivity;
 import com.vhall.opensdk.upload.UploadActivity;
 import com.vhall.opensdk.util.SpUtils;
+import com.vhall.opensdk.watchlive.DocPlayerOnlyActivity;
+import com.vhall.opensdk.watchlive.FastLivePlayerActivity;
 import com.vhall.opensdk.watchlive.LivePlayerActivity;
+import com.vhall.opensdk.watchlive.LivePlayerOnlyActivity;
 import com.vhall.opensdk.watchlive.LivePlayerUiActivity;
 import com.vhall.opensdk.watchlive.TimeShiftPlayerActivity;
 import com.vhall.opensdk.watchplayback.VodPlayerActivity;
@@ -59,12 +63,12 @@ public class MainActivity extends Activity {
     private static final int REQUEST_UPLOAD = 3;
     private static final int REQUEST_AUDIO_RECORD = 4;
     private static final int REQUEST_PUSH_WITH_DOC = 5;
+    private static final int REQUEST_AUDIO_FLSS = 6;
 
     SharedPreferences sp;
     private String token;
     private String roomid;
     private String chatId;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,6 +138,24 @@ public class MainActivity extends Activity {
         startAct(intent);
     }
 
+    public void playliveOnly(View view) {
+        chatId = SpUtils.share().getChatId();
+        roomid = sp.getString(KEY_LSS_ID, "");
+        Intent intent = new Intent(this, LivePlayerOnlyActivity.class);
+        startAct(intent);
+    }
+    public void playRtcLive(View view) {
+        roomid = sp.getString(KEY_LSS_ID, "");
+        if (getAudioRecordPermission(REQUEST_AUDIO_FLSS)) {
+            startRtcLive();
+        }
+    }
+
+    private void startRtcLive() {
+        Intent intent = new Intent(this, FastLivePlayerActivity.class);
+        intent.putExtra("inavId", sp.getString(KEY_INAV_ID, ""));
+        startAct(intent);
+    }
 
     public void playvod(View view) {
         chatId = SpUtils.share().getChatId();
@@ -172,11 +194,40 @@ public class MainActivity extends Activity {
 
     public void showDoc(View view) {
         roomid = sp.getString(KEY_LSS_ID, "");
+        chatId = SpUtils.share().getChatId();
+        if (getPushPermission(REQUEST_PUSH_WITH_DOC)) {
+            Intent intent = new Intent(this, DocLiveActivity.class);
+            startAct(intent);
+        }
+    }
+
+    public void pushdocOnly(View view) {
+        roomid = sp.getString(KEY_LSS_ID, "");
+        chatId = SpUtils.share().getChatId();
         if (getPushPermission(REQUEST_PUSH_WITH_DOC)) {
             Intent intent = new Intent(this, DocActivity.class);
             startAct(intent);
         }
+    }
 
+    public void showdocOnly(View view) {
+        roomid = sp.getString(KEY_LSS_ID, "");
+        chatId = SpUtils.share().getChatId();
+        if (getPushPermission(REQUEST_PUSH_WITH_DOC)) {
+            Intent intent = new Intent(this, DocActivity.class);
+            startAct(intent);
+        }
+    }
+
+    public void showDocOnly(View view) {
+        chatId = SpUtils.share().getChatId();
+        roomid = sp.getString(KEY_LSS_ID, "");
+        Intent intent = new Intent(this, DocPlayerOnlyActivity.class);
+        startAct(intent);
+    }
+
+    public void docWatermark(View view) {
+        startActivity(new Intent(this, WatermarkConfigActivity.class));
     }
 
     public void showIM(View view) {
@@ -222,7 +273,7 @@ public class MainActivity extends Activity {
 
     public void showScreenRecord(View view) {
         roomid = sp.getString(KEY_LSS_ID, "");
-        if (getAudioRecordPermission()) {
+        if (getAudioRecordPermission(REQUEST_AUDIO_RECORD)) {
             Intent intent = new Intent(this, ScreenRecordActivity.class);
             startAct(intent);
         }
@@ -259,14 +310,14 @@ public class MainActivity extends Activity {
         return false;
     }
 
-    private boolean getAudioRecordPermission() {
+    private boolean getAudioRecordPermission(int reqCode) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return true;
         }
         if (checkSelfPermission(RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             return true;
         }
-        requestPermissions(new String[]{RECORD_AUDIO}, REQUEST_AUDIO_RECORD);
+        requestPermissions(new String[]{RECORD_AUDIO}, reqCode);
         return false;
     }
 
@@ -334,6 +385,8 @@ public class MainActivity extends Activity {
                 Intent intent = new Intent(this, DocActivity.class);
                 startAct(intent);
             }
+        } else if (requestCode == REQUEST_AUDIO_FLSS) {
+            startRtcLive();
         }
     }
 

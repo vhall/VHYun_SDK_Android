@@ -7,4 +7,5 @@
 
     <color name="color_bg_blue">#489EF8</color>
     <color name="color_bg_green">#52CC90</color>
+    <color name="color_ff00000">#ff0000</color>
 </resources>

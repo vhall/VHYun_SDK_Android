@@ -1,23 +1,25 @@
 package com.vhall.opensdk.watchlive;
 
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,31 +50,30 @@ import org.json.JSONException;
 import java.util.Collection;
 
 /**
- * Created by Hank on 2017/11/23.
+ * Created by Hank on 2017/12/20.
  */
-public class LivePlayerActivity extends DocPlayerOnlyActivity {
+public class LivePlayerOnlyActivity extends Activity {
 
-    private static final String TAG = "LivePlayerActivity";
-
-    private VHLivePlayer mPlayer;
-    private VHVideoPlayerView mVideoPlayer;
-
-    //data
-    private String currentDPI = "";
-    private int drawmode = IVHVideoPlayer.DRAW_MODE_NONE;
-    //view
-    private ImageView mPlayBtn, ivScreen;
-    private ProgressBar mLoadingPB;
-    private TextView mSpeedTV;
-    //    private DPIPopu popu;
-    private RadioGroup mDPIGroup;
-    private LinearLayout ll_urls;
+    private static final String TAG = "LivePlayerOnlyActivity";
+    VHLivePlayer mPlayer;
+    VHVideoPlayerView mVideoPlayer;
+    private String roomId = "";
+    private String accessToken = "";
+    String currentDPI = "";
+    int drawmode = IVHVideoPlayer.DRAW_MODE_NONE;
+    ImageView mPlayBtn, ivScreen;
+    ProgressBar mLoadingPB;
+    TextView mSpeedTV;
+    RadioGroup mDPIGroup;
+    RelativeLayout rlPlayerContent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        ll_urls = this.findViewById(R.id.ll_urls);
+        roomId = getIntent().getStringExtra("roomId");
+        accessToken = getIntent().getStringExtra("token");
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        setContentView(R.layout.layout_liveonly);
         mDPIGroup = this.findViewById(R.id.rg_dpi);
         mVideoPlayer = this.findViewById(R.id.player);
         mPlayBtn = this.findViewById(R.id.btn_play);
@@ -80,7 +81,7 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
         mSpeedTV = this.findViewById(R.id.tv_speed);
         ivScreen = findViewById(R.id.iv_screen_show);
 
-        rlPlayerContent.setVisibility(View.VISIBLE);
+        rlPlayerContent = findViewById(R.id.rl_player_content);
 
         mDPIGroup.setOnCheckedChangeListener(new OnCheckedChange());
         mVideoPlayer.setDrawMode(Constants.VideoMode.DRAW_MODE_ASPECTFIT);
@@ -91,7 +92,6 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
                 .build();
         mPlayer.start(roomId, accessToken);
 
-        //TODO 投屏相关
         org.seamless.util.logging.LoggingUtil.resetRootHandler(
                 new FixedAndroidLogHandler()
         );
@@ -101,6 +101,21 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
                 Context.BIND_AUTO_CREATE
         );
     }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            rlPlayerContent.setVisibility(View.VISIBLE);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        } else {
+            rlPlayerContent.setVisibility(View.GONE);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+    }
+
 
     public void screenImageOnClick(View view) {
         ivScreen.setVisibility(View.GONE);
@@ -178,10 +193,6 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
                 case START:
                     mLoadingPB.setVisibility(View.GONE);
                     mPlayBtn.setImageResource(R.mipmap.icon_pause_bro);
-                    if (!TextUtils.isEmpty(channelId) && mDocument != null) {
-                        //设置文档延迟时间，以保证与视频操作同步
-                        mDocument.setDealTime(mPlayer.getRealityBufferTime() + 3000);
-                    }
                     break;
                 case BUFFER:
                     mLoadingPB.setVisibility(View.VISIBLE);
@@ -191,9 +202,7 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
                     mPlayBtn.setImageResource(R.mipmap.icon_start_bro);
                     break;
                 case END:
-
                     break;
-
             }
         }
 
@@ -212,7 +221,7 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
                             mDPIGroup.removeAllViews();
                             for (int i = 0; i < array.length(); i++) {
                                 String dpi = (String) array.opt(i);
-                                RadioButton rb = new RadioButton(LivePlayerActivity.this);
+                                RadioButton rb = new RadioButton(LivePlayerOnlyActivity.this);
                                 rb.setId(i);
                                 rb.setText(dpi);
                                 rb.setTextColor(Color.WHITE);
@@ -237,9 +246,8 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
                     }
                     break;
                 case Constants.Event.EVENT_URL:
-                    TextView textView = new TextView(LivePlayerActivity.this);
+                    TextView textView = new TextView(LivePlayerOnlyActivity.this);
                     textView.setText(currentDPI + ":" + msg);
-                    ll_urls.addView(textView);
                     break;
                 case Constants.Event.EVENT_DOWNLOAD_SPEED:
                     mSpeedTV.setText(msg + "kb/s");
@@ -251,7 +259,7 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
                     if (mPlayer.isPlaying()) {
                         return;
                     }
-                    Toast.makeText(LivePlayerActivity.this, "主播开始推流", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LivePlayerOnlyActivity.this, "主播开始推流", Toast.LENGTH_SHORT).show();
                     if (mPlayer.resumeAble())
                         mPlayer.resume();
                     break;
@@ -259,15 +267,13 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
                     if (!mPlayer.isPlaying()) {
                         return;
                     }
-                    Toast.makeText(LivePlayerActivity.this, "主播停止推流", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LivePlayerOnlyActivity.this, "主播停止推流", Toast.LENGTH_SHORT).show();
                     mPlayer.pause();
                     break;
                 case Constants.Event.EVENT_NO_STREAM:
-                    Toast.makeText(LivePlayerActivity.this, "主播端暂未推流", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LivePlayerOnlyActivity.this, "主播端暂未推流", Toast.LENGTH_SHORT).show();
                     break;
             }
-
-
         }
 
         @Override
@@ -278,16 +284,13 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
                 case Constants.ErrorCode.ERROR_CONNECT:
                     mLoadingPB.setVisibility(View.GONE);
                     mPlayBtn.setImageResource(R.mipmap.icon_start_bro);
-                    Toast.makeText(LivePlayerActivity.this, "Error message:error connect " + msg, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LivePlayerOnlyActivity.this, "Error message:error connect " + msg, Toast.LENGTH_SHORT).show();
                     break;
-
             }
         }
-
     }
 
 
-    //TODO 投屏相关
 //    ------------------------------------------------------投屏相关--------------------------------------------------
     private BrowseRegistryListener registryListener = new BrowseRegistryListener();
     private DevicePopu devicePopu;
@@ -359,7 +362,7 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
                 @Override
                 public void run() {
                     if (devicePopu == null) {
-                        devicePopu = new DevicePopu(LivePlayerActivity.this);
+                        devicePopu = new DevicePopu(LivePlayerOnlyActivity.this);
                         devicePopu.setOnItemClickListener(new OnItemClick());
                     }
                     devicePopu.deviceAdded(device);
@@ -372,7 +375,7 @@ public class LivePlayerActivity extends DocPlayerOnlyActivity {
                 @Override
                 public void run() {
                     if (devicePopu == null) {
-                        devicePopu = new DevicePopu(LivePlayerActivity.this);
+                        devicePopu = new DevicePopu(LivePlayerOnlyActivity.this);
                         devicePopu.setOnItemClickListener(new OnItemClick());
                     }
                     devicePopu.deviceRemoved(device);

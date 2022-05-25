@@ -1,49 +1,5 @@
 package com.vhall.opensdk.document;
 
-import android.app.Activity;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.os.Handler;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
-import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.widget.RadioGroup;
-import android.widget.RelativeLayout;
-import android.widget.ScrollView;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import com.vhall.document.DocumentView;
-import com.vhall.document.IDocument;
-import com.vhall.lss.push.VHLivePusher;
-import com.vhall.opensdk.R;
-import com.vhall.opensdk.util.TabAdapter;
-import com.vhall.ops.VHOPS;
-import com.vhall.player.Constants;
-import com.vhall.player.VHPlayerListener;
-import com.vhall.push.IVHCapture;
-import com.vhall.push.VHAudioCapture;
-import com.vhall.push.VHLivePushConfig;
-import com.vhall.push.VHLivePushFormat;
-import com.vhall.push.VHVideoCaptureView;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import static android.view.View.VISIBLE;
 import static com.vhall.document.DocumentView.DOC_BOARD;
 import static com.vhall.document.DocumentView.DOC_DOCUMENT;
@@ -57,27 +13,64 @@ import static com.vhall.ops.VHOPS.TYPE_DESTROY;
 import static com.vhall.ops.VHOPS.TYPE_SWITCHOFF;
 import static com.vhall.ops.VHOPS.TYPE_SWITCHON;
 
+import android.app.Activity;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+
+import com.vhall.document.DocumentView;
+import com.vhall.document.IDocument;
+import com.vhall.opensdk.R;
+import com.vhall.opensdk.WatermarkConfigActivity;
+import com.vhall.opensdk.util.TabAdapter;
+import com.vhall.ops.VHOPS;
+import com.vhall.ops.WatermarkOption;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 /**
  * Created by Hank on 2017/12/18.
- * TODO 文档回调注销
+ *
+ * 纯文档直播
  */
 public class DocActivity extends Activity {
     private static final String TAG = "DocActivity";
     private String mChannelId = "";
-    private String mRoomId = "";
-    private String mAccessToken = "";
-    VHOPS mDocument;
-    DocumentView mDocView;
-    RelativeLayout rl, rlContainer;
+    protected String mRoomId = "";
+    protected String mAccessToken = "";
+    protected VHOPS mDocument;
+    private DocumentView mDocView;
+    private RelativeLayout rl, rlContainer;
     //demo view
-    Switch switchDemo;
-    ScrollView mEditViewContainer;//文档操作容器
-    RadioGroup mDoodleActions;
-    LinearLayout mDoodleTypeContainer;
-    RadioGroup mDoodleTypes, viewAdds;
-    EditText et_color, et_size, et_param;
-    TextView mPageView, mStepView;
-    SharedPreferences sp;
+    private Switch switchDemo;
+    private ScrollView mEditViewContainer;//文档操作容器
+    private RadioGroup mDoodleActions;
+    private LinearLayout mDoodleTypeContainer;
+    private RadioGroup mDoodleTypes, viewAdds;
+    private EditText et_color, et_size, et_param;
+    private TextView mPageView, mStepView;
+    private SharedPreferences sp;
     private RecyclerView recyclerView;
     private TabAdapter tabAdapter;
     private LinearLayoutManager layoutManager;
@@ -86,15 +79,8 @@ public class DocActivity extends Activity {
     private String createType = DOC_BOARD;
     private IDocument.DrawAction mAction = IDocument.DrawAction.ADD;
     private IDocument.DrawType mType = IDocument.DrawType.PATH;
-
-    VHVideoCaptureView videoCapture;
-    IVHCapture audioCapture;
-    VHLivePusher pusher;
-    VHLivePushConfig config;
-    private ImageView btnPlay;
-    ProgressBar mLoadingView;
-    RelativeLayout rlVideo;
-
+    private WatermarkOption mWatermarkOption;
+    private SharedPreferences mSp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,50 +91,44 @@ public class DocActivity extends Activity {
             mRoomId = mChannelId;
         }
         mAccessToken = getIntent().getStringExtra("token");
-//        sp = getSharedPreferences("config", MODE_PRIVATE);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.doc_layout);
         initView();
-
-
-        //配置发直播系列参数
-        config = new VHLivePushConfig(VHLivePushFormat.PUSH_MODE_HD);//Android 仅支持PUSH_MODE_HD(480p)  PUSH_MODE_XXHD(720p)
-        config.screenOri = VHLivePushFormat.SCREEN_ORI_PORTRAIT;//横竖屏设置 重要
-        //发起流类型设置   STREAM_TYPE_A 音频，STREAM_TYPE_V 视频  STREAM_TYPE_AV 音视频
-        config.streamType = VHLivePushFormat.STREAM_TYPE_AV;
-        //初始化音视频采集器
-        videoCapture = this.findViewById(R.id.video_view);
-//        videoCapture.setGestureEnable(false);
-        audioCapture = new VHAudioCapture();
-        //初始化直播器
-        pusher = new VHLivePusher(videoCapture, audioCapture, config);//纯音频推流，视频渲染器传null
-        pusher.setListener(new MyListener());
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (pusher != null && pusher.getState() == Constants.State.START) {
-            pusher.pause();
-        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        initWatermarkOption();
         if (mDocument == null) {
             mDocument = new VHOPS(this, mChannelId, mRoomId, mAccessToken, true);
-//        mDocument = new VHOPS(mChannelId, mRoomId, mAccessToken);
+            if (null != mWatermarkOption) {
+                mDocument.setWatermark(mWatermarkOption);
+            }
             mDocument.setListener(opsCallback);
             mDocument.setEditable(true);
             mDocument.join();
         }
-        if (pusher != null) {
-            pusher.resume();
-        }
     }
 
+    private void initWatermarkOption() {
+        if (null == mSp) {
+            mSp = getSharedPreferences(WatermarkConfigActivity.SP_NAME, MODE_PRIVATE);
+        }
+        String markStr = mSp.getString(WatermarkConfigActivity.KEY_TEXT, "");
+        if (TextUtils.isEmpty(markStr)) {
+            mWatermarkOption = null;
+            return;
+        }
+        mWatermarkOption = new WatermarkOption(
+                markStr,
+                mSp.getString(WatermarkConfigActivity.KEY_COLOR, ""),
+                Integer.valueOf(mSp.getString(WatermarkConfigActivity.KEY_ANGLE, "")),
+                Float.valueOf(mSp.getString(WatermarkConfigActivity.KEY_OPACITY, "")),
+                Integer.valueOf(mSp.getString(WatermarkConfigActivity.KEY_FONTSIZE, ""))
+        );
+    }
 
     private VHOPS.EventListener opsCallback = new VHOPS.EventListener() {
 
@@ -204,87 +184,6 @@ public class DocActivity extends Activity {
             }
         }
     };
-
-    public void push(View view) {
-        if (pusher.getState() == Constants.State.START) {
-            pusher.pause();
-        } else {
-            if (pusher.resumeAble())
-                pusher.resume();
-            else
-                pusher.start(mRoomId, mAccessToken);
-        }
-    }
-
-    public void onVideoClick(View view) {
-        if (btnPlay.getVisibility() == VISIBLE) {
-            btnPlay.setVisibility(View.GONE);
-        } else {
-            btnPlay.setVisibility(VISIBLE);
-            new Handler(getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    btnPlay.setVisibility(View.GONE);
-                }
-            }, 3000);
-        }
-    }
-
-    class MyListener implements VHPlayerListener {
-
-        @Override
-        public void onError(int errorCode, int innerErrorCode, String msg) {
-            mLoadingView.setVisibility(View.GONE);
-            btnPlay.setSelected(false);
-            switch (errorCode) {
-                case Constants.ErrorCode.ERROR_PUSH://推送过程出错
-                    break;
-                case Constants.ErrorCode.ERROR_AUDIO_CAPTURE://音频采集过程出错
-                    break;
-                case Constants.ErrorCode.ERROR_VIDEO_CAPTURE://视频采集过程出错
-                    break;
-            }
-            Toast.makeText(DocActivity.this, "push error,errorCode:" + errorCode + ",innerCode:" + innerErrorCode + ",msg:" + msg, Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onStateChanged(Constants.State state) {
-            switch (state) {
-                case START:
-                    mLoadingView.setVisibility(View.GONE);
-                    btnPlay.setSelected(true);
-                    /**
-                     * 重要
-                     * 为了保证生成的回放文档播放正常，每次开始推流必需调用下面接口
-                     */
-                    mDocument.sendSpecial();
-                    break;
-                case BUFFER:
-                    mLoadingView.setVisibility(View.VISIBLE);
-                    break;
-                case STOP:
-                    mLoadingView.setVisibility(View.GONE);
-                    btnPlay.setSelected(false);
-                    break;
-            }
-        }
-
-        @Override
-        public void onEvent(int eventCode, String eventMsg) {
-            switch (eventCode) {
-                case Constants.Event.EVENT_UPLOAD_SPEED:
-                    break;
-                case Constants.Event.EVENT_NETWORK_UNOBS:
-                    //网络恢复
-                    mLoadingView.setVisibility(View.VISIBLE);
-                    break;
-                case Constants.Event.EVENT_NETWORK_OBS:
-                    //网络阻塞
-                    mLoadingView.setVisibility(View.GONE);
-                    break;
-            }
-        }
-    }
 
     private void replaceView() {
 
@@ -366,21 +265,6 @@ public class DocActivity extends Activity {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(tabAdapter);
 
-        rlVideo = findViewById(R.id.rl_video);
-        btnPlay = findViewById(R.id.btn_push);
-        mLoadingView = findViewById(R.id.pb_loading);
-        if (TextUtils.isEmpty(mRoomId)) {
-            rlVideo.setVisibility(View.GONE);
-        }
-
-
-        rlVideo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
         viewAdds = findViewById(R.id.rg_adds);
         viewAdds.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -388,9 +272,11 @@ public class DocActivity extends Activity {
                 switch (checkedId) {
                     case R.id.rb_add_doc:
                         createType = DOC_DOCUMENT;
+                        et_param.setText("");
                         break;
                     case R.id.rb_add_board:
                         createType = DOC_BOARD;
+                        et_param.setText("#ffffff");
                         break;
                 }
             }
@@ -480,19 +366,19 @@ public class DocActivity extends Activity {
                         switch (viewAdds.getCheckedRadioButtonId()) {
                             case R.id.rb_add_doc:
                                 if (TextUtils.isEmpty(param)) {
-                                    Toast.makeText(DocActivity.this, "docId cannot be null!", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(DocActivity.this, "请输入文档ID", Toast.LENGTH_SHORT).show();
                                     return;
                                 }
-                                mDocument.addView(DOC_DOCUMENT, param, 1280, 960);
+                                mDocument.addView(DOC_DOCUMENT, param, rl.getWidth(), rl.getHeight());
                                 break;
                             case R.id.rb_add_board:
                                 if (!TextUtils.isEmpty(param)) {
                                     if (param.length() != 7 && param.length() != 9) {
-                                        Toast.makeText(DocActivity.this, "not the normal color value!", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(DocActivity.this, "颜色格式不正确，格式例:#ffffff", Toast.LENGTH_SHORT).show();
                                         return;
                                     }
                                 }
-                                mDocument.addView(DOC_BOARD, param, 1280, 960);
+                                mDocument.addView(DOC_BOARD, param, rl.getWidth(), rl.getHeight());
                                 break;
                             default:
                                 break;
@@ -558,7 +444,9 @@ public class DocActivity extends Activity {
     }
 
     public void clickEventClear(View view) {
-        mDocView.clear();
+        if (null != mDocView) {
+            mDocView.clear();
+        }
     }
 
     public void clickEventSetDoc(View view) {
@@ -576,18 +464,5 @@ public class DocActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         mDocument.leave();
-        pusher.release();
-    }
-
-    private void setLayout() {
-//        WindowManager manager = getWindowManager();
-//        DisplayMetrics metrics = new DisplayMetrics();
-//        manager.getDefaultDisplay().getMetrics(metrics);
-//        int width = metrics.widthPixels;  //以像素素为单位
-//        int height = width * 3 / 4;
-//        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mDocView.getLayoutParams();
-//        params.width = width;
-//        params.height = height;
-//        mDocView.setLayoutParams(params);
     }
 }

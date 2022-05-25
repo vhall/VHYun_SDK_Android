@@ -83,6 +83,15 @@ public class ConfigActivity extends Activity {
         });
         mSpinner.setSelection(mAdapter.getPosition(findKeyByValue(sp.getInt(KEY_PIX_TYPE, VHLivePushFormat.PUSH_MODE_HD))));
 
+        etBroid.setText(sp.getString(KEY_BROADCAST_ID, ""));
+        etToken.setText(sp.getString(KEY_TOKEN, ""));
+        etDoc.setText(sp.getString(KEY_DOC_ID, ""));
+        etChat.setText(sp.getString(KEY_CHAT_ID, ""));
+        etLss.setText(sp.getString(KEY_LSS_ID, ""));
+        etVod.setText(sp.getString(KEY_VOD_ID, ""));
+        etInav.setText(sp.getString(KEY_INAV_ID, ""));
+        appId.setText(sp.getString(KEY_APP_ID, ""));
+
         mBtnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

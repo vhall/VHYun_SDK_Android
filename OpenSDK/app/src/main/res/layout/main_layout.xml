@@ -65,14 +65,49 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:onClick="showDoc"
-                    android:text="文档发直播" />
+                    android:text="视频直播+文档" />
+
+                <Button
+                    android:id="@+id/pushdocOnly"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="pushdocOnly"
+                    android:text="纯文档直播" />
+
+                <Button
+                    android:id="@+id/showdocOnly"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showDocOnly"
+                    android:text="看纯文档直播" />
+
+                <Button
+                    android:id="@+id/docWatermark"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="docWatermark"
+                    android:text="文档水印配置" />
+
+                <Button
+                    android:id="@+id/btn_play_liveonly"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="playliveOnly"
+                    android:text="看直播" />
 
                 <Button
                     android:id="@+id/btn_play_live"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:onClick="playlive"
-                    android:text="看文档直播" />
+                    android:text="看直播+文档" />
+
+                <Button
+                    android:id="@+id/btn_im"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="showIM"
+                    android:text="看直播+聊天" />
 
                 <Button
                     android:id="@+id/btn_play_vod"
@@ -93,14 +128,6 @@
                     android:layout_height="wrap_content"
                     android:onClick="uploadDocument"
                     android:text="上传文档" />
-
-
-                <Button
-                    android:id="@+id/btn_im"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:onClick="showIM"
-                    android:text="聊天+看直播" />
 
                 <Button
                     android:id="@+id/btn_interactive"
@@ -173,6 +200,11 @@
                     android:onClick="timeshift"
                     android:text="直播时移" />
 
+                <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="playRtcLive"
+                    android:text="看快直播" />
             </LinearLayout>
         </LinearLayout>
     </android.support.v4.widget.NestedScrollView>
