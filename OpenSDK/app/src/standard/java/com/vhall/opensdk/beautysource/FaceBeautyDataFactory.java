@@ -7,6 +7,7 @@ import com.vhall.beautifykit.entity.FaceBeautyFilterBean;
 import com.vhall.beautifykit.entity.FaceBeautyStyleBean;
 import com.vhall.beautifykit.entity.ModelAttributeData;
 import com.vhall.beautifykit.infe.AbstractFaceBeautyDataFactory;
+import com.vhall.opensdk.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -63,7 +64,15 @@ public class FaceBeautyDataFactory extends AbstractFaceBeautyDataFactory {
     @NonNull
     @Override
     public ArrayList<FaceBeautyBean> getSkinBeauty() {
-        return new ArrayList<>();
+        ArrayList<FaceBeautyBean> params = new ArrayList<>();
+        params.add(new FaceBeautyBean(
+                        "test",
+                        R.string.beauty_box_heavy_blur_fine,
+                        R.drawable.icon_beauty_skin_buffing_close_selector,
+                        R.drawable.icon_beauty_skin_buffing_open_selector
+                )
+        );
+        return params;
     }
 
     /**
@@ -74,7 +83,22 @@ public class FaceBeautyDataFactory extends AbstractFaceBeautyDataFactory {
     @NonNull
     @Override
     public ArrayList<FaceBeautyBean> getShapeBeauty() {
-        return new ArrayList<>();
+        ArrayList<FaceBeautyBean> params = new ArrayList<>();
+        params.add(new FaceBeautyBean(
+                        "test",
+                        R.string.beauty_box_cheek_thinning,
+                        R.drawable.icon_beauty_shape_face_cheekthin_open_selector,
+                        R.drawable.icon_beauty_shape_face_cheekthin_close_selector
+                )
+        );
+        params.add(new FaceBeautyBean(
+                        "test2",
+                        R.string.beauty_box_eye_circle,
+                        R.drawable.icon_beauty_shape_face_cheekthin_open_selector,
+                        R.drawable.icon_beauty_shape_face_cheekthin_close_selector
+                )
+        );
+        return params;
     }
 
     /**
@@ -97,7 +121,12 @@ public class FaceBeautyDataFactory extends AbstractFaceBeautyDataFactory {
     @NonNull
     @Override
     public HashMap<String, ModelAttributeData> getModelAttributeRange() {
-        return new HashMap<>();
+        HashMap<String, ModelAttributeData> params = new HashMap<>();
+        /*美肤*/
+        params.put("test", new ModelAttributeData(0.3, 0.0, 0.0, 1.0));
+        /*美型*/
+        params.put("test2", new ModelAttributeData(1.0, 0.0, 0.0, 1.0));
+        return params;
     }
 
 

@@ -106,6 +106,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentBottom="true"
                     android:layout_centerHorizontal="true"
+                    android:layout_gravity="center_horizontal"
                     android:clickable="true"
                     android:onClick="push"
                     android:src="@mipmap/icon_start_bro" />

@@ -797,9 +797,13 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     }
 
     private void switchBeautifyState(boolean enable) {
-        if (null != localStream) {
-            VHBeautifyKit.getInstance().setBeautifyEnable(enable);
-            localStream.setEnableBeautify(false);//关闭默认美颜
+        if (VHBeautifyKit.getInstance().isVHallBeautify()) {
+            Toast.makeText(requireActivity(), "高级美颜未开通或打包未选择美颜flavor", Toast.LENGTH_SHORT).show();
+        } else {
+            if (null != localStream) {
+                VHBeautifyKit.getInstance().setBeautifyEnable(enable);
+                localStream.setEnableBeautify(false);//关闭默认美颜
+            }
         }
     }
 

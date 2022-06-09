@@ -121,14 +121,7 @@ public class PushWithBeautifyActivity extends FragmentActivity {
 
         ((Switch) findViewById(R.id.switch_beautify)).setOnCheckedChangeListener((button, isChecked) -> {
             if (VHBeautifyKit.getInstance().isVHallBeautify()) {
-                int level = (++mBeautyLevel) % 5;
-                if (level == 0) {
-                    videoCapture.setFilterEnable(false);
-                } else {
-                    videoCapture.setFilterEnable(true);
-                    videoCapture.setBeautyLevel(level);
-                }
-                Toast.makeText(this, "level:" + level, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "高级美颜未开通或打包未选择美颜flavor", Toast.LENGTH_SHORT).show();
             } else {
                 VHBeautifyKit.getInstance().setBeautifyEnable(isChecked);
             }
