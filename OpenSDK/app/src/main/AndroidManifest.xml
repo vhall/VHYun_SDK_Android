@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.vhall.opensdk">
 
     <application
         android:name=".VhallApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        tools:replace="allowBackup">
         <activity
             android:name=".watchlive.TimeShiftPlayerActivity"
             android:configChanges="keyboardHidden|screenSize|orientation"
@@ -90,9 +92,18 @@
         <activity
             android:name=".screenRecord.ScreenRecordActivity"
             android:launchMode="singleTask" />
+
+        <activity
+            android:name=".watchlive.LivePlayerUiActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".watchplayback.VodPlayerUiActivity"
+            android:screenOrientation="portrait" />
+
         <service android:name=".screenRecord.ScreenService" /> <!-- 文档上传使用 -->
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="com.vhall.opensdk"
             android:exported="false"
             android:grantUriPermissions="true">

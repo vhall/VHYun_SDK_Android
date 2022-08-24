@@ -17,38 +17,45 @@
         android:textColor="@android:color/holo_red_light"
         android:textSize="6dp" />
 
-    <CheckBox
-        android:id="@+id/cb_video"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_margin="2dp"
-        android:button="@drawable/video_check_bg"
-        android:checked="false" />
-
-    <CheckBox
-        android:id="@+id/cb_audio"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_margin="2dp"
-        android:button="@drawable/audio_check_bg"
-        android:checked="false" />
-
     <TextView
         android:id="@+id/tv_speed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:textColor="#FF3030" />
-    <ImageView
-        android:id="@+id/iv_info"
-        android:layout_width="wrap_content"
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/call_statistic"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:padding="10dp"/>
+        android:layout_margin="2dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <CheckBox
+            android:id="@+id/cb_video"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:button="@drawable/video_check_bg"
+            android:checked="false" />
+
+        <CheckBox
+            android:id="@+id/cb_audio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:button="@drawable/audio_check_bg"
+            android:checked="false" />
+
+        <ImageView
+            android:id="@+id/iv_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/call_statistic" />
+
+        <ImageView
+            android:id="@+id/iv_mainscreen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/inav_mainscreen" />
+    </LinearLayout>
 </RelativeLayout>

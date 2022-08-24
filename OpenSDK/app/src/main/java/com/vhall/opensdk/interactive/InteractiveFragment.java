@@ -13,11 +13,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -34,6 +29,13 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatSpinner;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.vhall.beautify.VHBeautifyKit;
 import com.vhall.beautifykit.control.FaceBeautyControlView;
 import com.vhall.ilss.VHInteractive;
@@ -41,7 +43,11 @@ import com.vhall.opensdk.ConfigActivity;
 import com.vhall.opensdk.R;
 import com.vhall.opensdk.beautysource.FaceBeautyDataFactory;
 import com.vhall.opensdk.util.ListUtil;
+import com.vhall.opensdk.util.SpUtils;
+import com.vhall.rtc.VRTCCode;
+import com.vhall.vhallrtc.client.FinishCallback;
 import com.vhall.vhallrtc.client.Room;
+import com.vhall.vhallrtc.client.SignalingChannel;
 import com.vhall.vhallrtc.client.Stream;
 import com.vhall.vhallrtc.client.VHRenderView;
 
@@ -62,7 +68,8 @@ import okhttp3.Response;
 
 public class InteractiveFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "InteractiveFragment";
-    Context mContext;
+    private Context mContext;
+    private InteractiveActivity mActivity;
     RecyclerView mStreamContainer;//远程流渲染view容器
     LinearLayoutManager mLayoutManager;
     StreamAdapter mAdapter;//容器Adapter
@@ -70,22 +77,25 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     VHRenderView localView;//本地流渲染view
     Stream localStream;//本地流
     Button mReqBtn, mJoinBtn, mQuitBtn, mMemberBtn;//操作隐藏，demo默认进入直接上麦
-    Button btnScreen;
     AlertDialog mDialog;
     //功能按钮
     ImageView mSwitchCameraBtn, mInfoBtn;
     CheckBox mBroadcastTB, mVideoTB, mAudioTB, mDualTB;
     TextView mOnlineTV, tvScaleType;
 
+    private AppCompatSpinner mDefSpinner, mMCUBgMode, mMixLayoutMode, mMixLayoutModeAdaptive;
+    private final int DEFAULTRESWIDTH = 640;
+    private final int MDEFAULTRESHEIGHT = 480;
+
     public String mRoomId;
     public String mAccessToken;
     public Boolean isNodelayLiveAudience=false;//无延迟直播观众角色
+    public String mNoDelayAction = null;
     VHInteractive interactive = null;
     boolean isEnable = false;//是否可用
     boolean isOnline = false;//是否上麦
     String mRoomAttr = "roomAttr";
     String mBroadcastid = "";
-    int mDefinition = 0;
     MemberPopu mMemberPopu;
     ActionPopu mActionPopu;
     StreamInfoPopu streamPop;
@@ -97,8 +107,16 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
     private FaceBeautyControlView mFaceBeautyControlView;
     private FaceBeautyDataFactory mFaceBeautyDataFactory;
     private boolean useBeautify = false;
+    private Switch mSwitchMCUBg = null;
+    private Switch mSwitchMCUPlaceholder = null;
+    private View mMCUSwitchGroup = null;
+    private int mMCUBgScaleType = VRTCCode.MCU_BG_MODE_FILL;
+    private String mMCUBgUrl = "";
+    private String mMCUPlaceholderUrl = "";
 
     private MediaProjectionManager mediaProjectionManager = null;
+
+    private String mDocStreamId;
 
     Handler mHandler = new Handler(new Handler.Callback() {
         @Override
@@ -137,11 +155,12 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         return fragment;
     }
 
-    public static InteractiveFragment getInstance(String roomid, String accessToken,Boolean isNodelayLiveAudience) {
+    public static InteractiveFragment getInstance(String roomid, String accessToken,Boolean isNodelayLiveAudience, String action) {
         InteractiveFragment fragment = new InteractiveFragment();
         fragment.mRoomId = roomid;
         fragment.mAccessToken = accessToken;
         fragment.isNodelayLiveAudience=isNodelayLiveAudience;
+        fragment.mNoDelayAction = action;
         return fragment;
     }
 
@@ -150,8 +169,15 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mContext = context;
         super.onAttach(context);
         if (context instanceof InteractiveActivity) {
+            mActivity = (InteractiveActivity) context;
             useBeautify = ((InteractiveActivity) context).getIntent().getBooleanExtra("beautify", false);
         }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mActivity = null;
     }
 
     @Override
@@ -172,12 +198,12 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         //取配置
         sp = mContext.getSharedPreferences("config", Context.MODE_PRIVATE);
         mBroadcastid = sp.getString(ConfigActivity.KEY_BROADCAST_ID, "");
-        mDefinition = sp.getInt(KEY_PIX_TYPE, 0);
+        mMCUBgUrl = sp.getString(ConfigActivity.KEY_RTC_MCU_BG, "");
+        mMCUPlaceholderUrl = sp.getString(ConfigActivity.KEY_RTC_MCU_PLACEHOLDER, "");
         interactive = new VHInteractive(mContext, new RoomListener());
         interactive.setOnMessageListener(new MyMessageListener());
 //        VHTool.enableDebugLog(true);
-        if(!isNodelayLiveAudience)
-        {
+        if (!isNodelayAudiance()) {
             initLocalView();
             initLocalStream();
         }
@@ -225,22 +251,31 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         super.onDestroy();
     }
 
+    private boolean isNodelayAudiance() {
+        return InteractiveActivity.NODELAY_ACTION_WATCH.equals(mNoDelayAction);
+    }
 
     private void initInteractive() {
-        interactive.init(mRoomId, mAccessToken,mBroadcastid, isNodelayLiveAudience?VHInteractive.MODE_LIVE:VHInteractive.MODE_RTC,isNodelayLiveAudience?VHInteractive.ROLE_AUDIENCE:VHInteractive.ROLE_HOST,new VHInteractive.InitCallback() {
-            @Override
-            public void onSuccess() {
-                isEnable = true;
-                interactive.enterRoom(mRoomAttr);//初始化成功，直接进入房间
-                refreshMembers();
-            }
+        interactive.init(
+                mRoomId,
+                mAccessToken,
+                mBroadcastid,
+                isNodelayLiveAudience ? VHInteractive.MODE_LIVE : VHInteractive.MODE_RTC,
+                isNodelayAudiance() ? VHInteractive.ROLE_AUDIENCE : VHInteractive.ROLE_HOST,
+                new VHInteractive.InitCallback() {
+                    @Override
+                    public void onSuccess() {
+                        isEnable = true;
+                        interactive.enterRoom(mRoomAttr);//初始化成功，直接进入房间
+                        refreshMembers();
+                    }
 
-            @Override
-            public void onFailure(int errorCode, String errorMsg) {
-                isEnable = false;
-                Toast.makeText(mContext, errorMsg, Toast.LENGTH_SHORT).show();
-            }
-        });
+                    @Override
+                    public void onFailure(int errorCode, String errorMsg) {
+                        isEnable = false;
+                        showToast(errorMsg);
+                    }
+                });
     }
 
     class RoomListener implements Room.RoomDelegate {
@@ -250,8 +285,9 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             Log.i(TAG, "onDidConnect");
             interactiveRoom = room;
             subscribeStreams(room.getRemoteStreams());
-            join();//进入房间成功，自动上麦
-
+            if (!(isNodelayLiveAudience && mNoDelayAction.equals(InteractiveActivity.NODELAY_ACTION_WATCH))) {
+                join();//进入房间成功，自动上麦
+            }
         }
 
         /**
@@ -289,13 +325,32 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         }
 
         @Override
+        public void onDidInternalStreamAdded(Room room, JSONObject jsonObject) {
+            Log.i(TAG, "onDidInternalStreamAdded " + jsonObject.toString());
+            showToast("onDidInternalStreamAdded " + jsonObject.toString());
+            mDocStreamId = jsonObject.optString("id");
+        }
+
+        @Override
+        public void onDidInternalStreamRemoved(Room room, JSONObject jsonObject) {
+            Log.i(TAG, "onDidInternalStreamRemoved : " + jsonObject.toString());
+            showToast("onDidInternalStreamRemoved : " + jsonObject.toString());
+        }
+
+        @Override
+        public void onDidInternalStreamFailed(Room room, JSONObject jsonObject) {
+            Log.i(TAG, "onDidInternalStreamRemoved : " + jsonObject.toString());
+            showToast("onDidInternalStreamRemoved : " + jsonObject.toString());
+        }
+
+        @Override
         public void onDidUnPublishStream(Room room, Stream stream) {//下麦
             Log.i(TAG, "onDidUnPublishStream");
             isOnline = false;
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(mContext, "下麦成功", Toast.LENGTH_SHORT).show();
+                    showToast("下麦成功");
                 }
             });
         }
@@ -452,7 +507,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(mContext, "无权限或观看的无延时直播", Toast.LENGTH_SHORT).show();
+                    showToast("无权限或观看的无延时直播");
                 }
             });
             return;
@@ -540,21 +595,21 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                         if (status == 1) {//批准上麦
                             interactive.publish();
                         } else {
-                            Toast.makeText(mContext, "您的上麦请求未通过!", Toast.LENGTH_SHORT).show();
+                            showToast("您的上麦请求未通过!");
                         }
                         break;
                     case VHInteractive.askfor_inav_publish://邀请上麦消息
                         showDialog(VHInteractive.askfor_inav_publish, userid);
                         break;
                     case VHInteractive.kick_inav_stream:
-                        Toast.makeText(mContext, "您已被请下麦！", Toast.LENGTH_SHORT).show();
+                        showToast("您已被请下麦！");
                         break;
                     case VHInteractive.kick_inav:
-                        Toast.makeText(mContext, "您已被踢出房间！", Toast.LENGTH_SHORT).show();
+                        showToast("您已被踢出房间！");
                         getActivity().finish();
                         break;
                     case VHInteractive.force_leave_inav:
-                        Toast.makeText(mContext, "您已强制被踢出房间！", Toast.LENGTH_SHORT).show();
+                        showToast("您已强制被踢出房间！");
                         getActivity().finish();
                         break;
                     case VHInteractive.user_publish_callback:
@@ -570,10 +625,10 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                                 action = "拒绝上麦！";
                                 break;
                         }
-                        Toast.makeText(mContext, userid + ":" + action, Toast.LENGTH_SHORT).show();
+                        showToast(userid + ":" + action);
                         break;
                     case VHInteractive.inav_close:
-                        Toast.makeText(mContext, "直播间已关闭", Toast.LENGTH_SHORT).show();
+                        showToast("直播间已关闭");
                         getActivity().finish();
                         break;
 
@@ -673,27 +728,95 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mMemberBtn = getView().findViewById(R.id.btn_members);
         mInfoBtn = getView().findViewById(R.id.iv_info);
         mOnlineTV = getView().findViewById(R.id.tv_online);
-        btnScreen = getView().findViewById(R.id.btn_screen_record);
+        getView().findViewById(R.id.btn_forceleave).setOnClickListener(this);
+
+        mMixLayoutMode = getView().findViewById(R.id.layoutmode);
+        mMixLayoutMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (0 < position) {
+                    if (position >= 26) position++;//TODO code 26 is missing
+                    changeMixLayoutMode(position - 1);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        mMixLayoutModeAdaptive = getView().findViewById(R.id.layoutmodeAdaptive);
+        mMixLayoutModeAdaptive.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (0 < position) {
+                    changeMixAdaptiveLayoutMode(position - 1);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        mMCUBgMode = getView().findViewById(R.id.mcu_bg_mode);
+        mMCUBgMode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (0 < position) {
+                    changeMCUBgMode(position - 1);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        mDefSpinner = getView().findViewById(R.id.inav_def);
+        mDefSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                changeDefinition(position);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        getView().findViewById(R.id.lable_beautify).setVisibility(useBeautify ? View.VISIBLE : View.GONE);
         Switch beautifySwitch = getView().findViewById(R.id.switch_beautify);
         beautifySwitch.setVisibility(useBeautify ? View.VISIBLE : View.GONE);
-        beautifySwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            switchBeautifyState(isChecked);
-        });
-//无延迟直播
-        if(isNodelayLiveAudience){
+        beautifySwitch.setOnCheckedChangeListener((buttonView, isChecked) -> switchBeautifyState(isChecked));
+
+        getView().findViewById(R.id.inav_doc).setOnClickListener(v -> mActivity.showDocFragment());
+
+        Switch docmixSwitch = getView().findViewById(R.id.switch_docmix);
+        docmixSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> docCloudMix(isChecked));
+
+        getView().findViewById(R.id.btn_doc_main).setOnClickListener(v -> docCloudMix2Main());
+
+        mMCUSwitchGroup = getView().findViewById(R.id.mcugroup);
+        mSwitchMCUBg = getView().findViewById(R.id.switch_mcu_bg);
+        mSwitchMCUBg.setOnCheckedChangeListener((buttonView, isChecked) -> switchMCUBg(isChecked, mMCUBgScaleType));
+        mSwitchMCUPlaceholder = getView().findViewById(R.id.switch_mcu_placeholder);
+        mSwitchMCUPlaceholder.setOnCheckedChangeListener((buttonView, isChecked) -> switchMCUPlaceholder(isChecked));
+
+        //无延迟直播
+        if (isNodelayAudiance()) {
+            getView().findViewById(R.id.ll_menu).setVisibility(View.GONE);
             localView.setVisibility(View.GONE);
             mReqBtn.setVisibility(View.GONE);
             mQuitBtn.setVisibility(View.GONE);
-            btnScreen.setVisibility(View.GONE);
-            mBroadcastTB.setVisibility(View.GONE);
-            mVideoTB.setVisibility(View.GONE);
-            mAudioTB.setVisibility(View.GONE);
-            mDualTB.setVisibility(View.GONE);
-            mSwitchCameraBtn.setVisibility(View.GONE);
-            mInfoBtn.setVisibility(View.GONE);
+            mJoinBtn.setVisibility(View.GONE);
+            getView().findViewById(R.id.btn_forceleave).setVisibility(View.GONE);
         }
 
-        btnScreen.setOnClickListener(this);
 //        tvScaleType = getView().findViewById(R.id.tv_scale_type);
         mJoinBtn.setOnClickListener(this);
         mQuitBtn.setOnClickListener(this);
@@ -710,19 +833,22 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         mBroadcastTB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                if (null != mMCUSwitchGroup) {
+//                    mMCUSwitchGroup.setVisibility(View.GONE);
+//                }
                 if (TextUtils.isEmpty(mBroadcastid)) {
                     mBroadcastTB.setChecked(false);
-                    Toast.makeText(mContext, "旁路ID为空，无法推旁路", Toast.LENGTH_SHORT).show();
+                    showToast("旁路ID为空，无法推旁路");
                     return;
                 }
-                int type = isChecked ? 1 : 2;
+                final int type = isChecked ? 1 : 2;
                 interactive.broadcastRoom(type, new Callback() {
                     @Override
                     public void onFailure(Call call, IOException e) {
                         new Handler(Looper.getMainLooper()).post(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(mContext, "推旁路失败", Toast.LENGTH_SHORT).show();
+                                showToast(isChecked ? "推旁路失败" : "停止旁路失败");
                             }
                         });
                     }
@@ -732,7 +858,10 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                         new Handler(Looper.getMainLooper()).post(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(mContext, "推旁路成功", Toast.LENGTH_SHORT).show();
+                                showToast( isChecked ? "推旁路成功" : "推旁路结束");
+//                                if (isChecked && null != mMCUSwitchGroup) {
+//                                    mMCUSwitchGroup.setVisibility(View.VISIBLE);
+//                                }
                             }
                         });
                     }
@@ -785,6 +914,30 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         VHBeautifyKit.getInstance().setFaceDetectionListener(faceNum -> Log.d(TAG, ">>>faceNum = " + faceNum));
     }
 
+    private void changeDefinition(int position) {
+        int dWidth = DEFAULTRESWIDTH;
+        int dHeight = MDEFAULTRESHEIGHT;
+        if (position == Stream.VhallFrameResolutionValue.VhallFrameResolution640x480.getValue()) {
+            dWidth = DEFAULTRESWIDTH;
+            dHeight = MDEFAULTRESHEIGHT;
+        } else if (position == Stream.VhallFrameResolutionValue.VhallFrameResolution480x360.getValue()) {
+            dWidth = 480;
+            dHeight = 360;
+        } else if (position == Stream.VhallFrameResolutionValue.VhallFrameResolution320x240.getValue()) {
+            dWidth = 320;
+            dHeight = 240;
+        } else if (position == Stream.VhallFrameResolutionValue.VhallFrameResolution240x160.getValue()) {
+            dWidth = 240;
+            dHeight = 160;
+        } else if (position == Stream.VhallFrameResolutionValue.VhallFrameResolution192x144.getValue()) {
+            dWidth = 192;
+            dHeight = 144;
+        }
+        if (null != localStream) {
+            localStream.ChangeCarameFormat(dWidth, dHeight, 15);
+        }
+    }
+
     private void initBeautifyData() {
         mFaceBeautyControlView = getView().findViewById(R.id.faceBeautyControlView);
         mFaceBeautyControlView.setVisibility(useBeautify ? View.VISIBLE : View.GONE);
@@ -793,16 +946,114 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             mFaceBeautyControlView.bindDataFactory(mFaceBeautyDataFactory);
             mFaceBeautyControlView.setOnBottomAnimatorChangeListener(showRate -> {
             });
+        } else {
+            VHBeautifyKit.getInstance().setBeautifyEnable(false);
+        }
+    }
+
+    private void switchDoc(boolean enable) {
+        if (null != localStream) {
+
+        }
+    }
+
+    private void switchDocMix(boolean enable) {
+        if (null != localStream) {
+            VHBeautifyKit.getInstance().setBeautifyEnable(enable);
+            localStream.setEnableBeautify(false);//关闭默认美颜
+        }
+    }
+
+    private void docCloudMix(boolean isChecked) {
+        if (isChecked) {
+            interactive.startDocCloudRender(SpUtils.share().getAppId(), SpUtils.share().getChatId(), new FinishCallback() {
+                @Override
+                public void onFinish(int i, @Nullable String s) {
+                    Log.e(TAG, "---> startDocCloudRender " + i + " - " + s);
+                }
+            });
+        } else {
+            interactive.stopDocCloudRender(SpUtils.share().getAppId(), SpUtils.share().getChatId(), new FinishCallback() {
+                @Override
+                public void onFinish(int i, @Nullable String s) {
+                    Log.e(TAG, "---> stopDocCloudRender " + i + " - " + s);
+                }
+            });
+        }
+    }
+
+    private void docCloudMix2Main() {
+        if (!TextUtils.isEmpty(mDocStreamId)) {
+            interactive.setMixLayoutMainScreen(mDocStreamId, new FinishCallback() {
+                @Override
+                public void onFinish(int i, @Nullable String s) {
+                    Log.e(TAG, "---> " + i + " - " + s);
+                }
+            });
         }
     }
 
     private void switchBeautifyState(boolean enable) {
-        if (VHBeautifyKit.getInstance().isVHallBeautify()) {
-            Toast.makeText(requireActivity(), "高级美颜未开通或打包未选择美颜flavor", Toast.LENGTH_SHORT).show();
+        if (null != localStream) {
+            VHBeautifyKit.getInstance().setBeautifyEnable(enable);
+            localStream.setEnableBeautify(false);//关闭默认美颜
+        }
+    }
+
+    private void changeMixLayoutMode(int pos) {
+        if (null != interactive) {
+            interactive.setMixLayoutMode(pos, null, (code, msg) -> {
+                showToast(VRTCCode.MCU_BG_RESULT == code ? "成功" : code + " : " + msg);
+            });
+        }
+    }
+
+    private void changeMixAdaptiveLayoutMode(int pos) {
+        if (null != interactive) {
+            interactive.setMixAdaptiveLayoutMode(pos, (code, msg) -> {
+                showToast(VRTCCode.MCU_BG_RESULT == code ? "成功" : code + " : " + msg);
+            });
+        }
+    }
+
+    private void changeMCUBgMode(int pos) {
+        mMCUBgScaleType = pos;
+        if (mSwitchMCUBg.isChecked()) {
+            switchMCUBg(true, pos);
         } else {
-            if (null != localStream) {
-                VHBeautifyKit.getInstance().setBeautifyEnable(enable);
-                localStream.setEnableBeautify(false);//关闭默认美颜
+            mSwitchMCUBg.setChecked(true);
+        }
+    }
+
+    private void switchMCUBg(boolean enable, int scaleType) {
+        if (null != interactive) {
+            if (enable) {
+                interactive.setRoomBroadCastBackgroundImage(
+                        mMCUBgUrl,
+                        scaleType,
+                        (code, msg) -> {
+                            showToast(VRTCCode.MCU_BG_RESULT == code ? "成功" : code + " : " + msg);
+                        });
+            } else {
+                interactive.resetRoomBroadCastBackgroundImage((code, msg) -> {
+                    showToast(VRTCCode.MCU_BG_RESULT == code ? "成功" : code + " : " + msg);
+                });
+            }
+        }
+    }
+
+    private void switchMCUPlaceholder(boolean enable) {
+        if (null != interactive) {
+            if (enable) {
+                interactive.setRoomBroadCastPlaceholderImage(
+                        mMCUPlaceholderUrl,
+                        (code, msg) -> {
+                            showToast(VRTCCode.MCU_BG_RESULT == code ? "成功" : code + " : " + msg);
+                        });
+            } else {
+                interactive.resetRoomBroadCastPlaceholderImage((code, msg) -> {
+                    showToast(VRTCCode.MCU_BG_RESULT == code ? "成功" : code + " : " + msg);
+                });
             }
         }
     }
@@ -811,7 +1062,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
         @Override
         public void onFilterSelected(int res) {
-            Toast.makeText(requireContext(), getString(res), Toast.LENGTH_SHORT).show();
+            showToast(getString(res));
         }
 
         @Override
@@ -925,6 +1176,9 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             case R.id.btn_quit:
                 interactive.unpublish();
                 break;
+            case R.id.btn_forceleave:
+                interactive.forceLeaveRoom(SpUtils.share().getUserId(), null);
+                break;
             case R.id.btn_request:
                 joinRequest();
                 break;
@@ -938,9 +1192,6 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                 if (infoListener != null) {
                     infoListener.onInfoClick(tempLocal);
                 }
-                break;
-            case R.id.btn_screen_record:
-
                 break;
         }
     }
@@ -964,7 +1215,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(mContext, obj.optString("msg"), Toast.LENGTH_SHORT).show();
+                                showToast(obj.optString("msg"));
                                 getActivity().finish();
                             }
                         });
@@ -1021,6 +1272,11 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             });
             streamPop.showAtLocation(getView(), Gravity.CENTER, 0, 0);
         }
+
+        @Override
+        public void onMainScreenClick(Stream stream) {
+            stream.setMixLayoutMainScreen(null, null);
+        }
     };
 
     interface ItemClickListener {
@@ -1029,6 +1285,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
     interface InfoClickListener {
         void onInfoClick(Stream stream);
+        void onMainScreenClick(Stream stream);
     }
 
     class StreamAdapter extends RecyclerView.Adapter<MyHolder> {
@@ -1069,12 +1326,15 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
                 }
             });
 
-            holder.ivInfo.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (infoListener != null) {
-                        infoListener.onInfoClick(stream);
-                    }
+            holder.ivInfo.setOnClickListener(v -> {
+                if (infoListener != null) {
+                    infoListener.onInfoClick(stream);
+                }
+            });
+
+            holder.ivMainScreen.setOnClickListener(v -> {
+                if (infoListener != null) {
+                    infoListener.onMainScreenClick(stream);
                 }
             });
         }
@@ -1114,7 +1374,7 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         CheckBox cbVideo;
         CheckBox cbAudio;
         TextView tvDescribe;
-        ImageView ivInfo;
+        ImageView ivInfo, ivMainScreen;
 
 
         public MyHolder(View itemView) {
@@ -1131,10 +1391,17 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
             renderView.init(null, null);
             tvDescribe = itemView.findViewById(R.id.tv_speed);
             ivInfo = itemView.findViewById(R.id.iv_info);
+            ivMainScreen = itemView.findViewById(R.id.iv_mainscreen);
             cbVideo = itemView.findViewById(R.id.cb_video);
             cbAudio = itemView.findViewById(R.id.cb_audio);
         }
     }
 
-
+    private void showToast(String msg) {
+        try {
+            requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity(), "-> " + msg, Toast.LENGTH_SHORT).show());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

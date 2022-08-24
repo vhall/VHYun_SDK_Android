@@ -11,13 +11,14 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
 
 import com.vhall.lss.push.VHScreenRecordService;
 import com.vhall.opensdk.R;

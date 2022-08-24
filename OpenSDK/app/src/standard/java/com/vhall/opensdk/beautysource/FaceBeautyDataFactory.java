@@ -1,6 +1,6 @@
 package com.vhall.opensdk.beautysource;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.vhall.beautifykit.entity.FaceBeautyBean;
 import com.vhall.beautifykit.entity.FaceBeautyFilterBean;

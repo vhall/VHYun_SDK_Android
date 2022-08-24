@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 public class WatermarkConfigActivity extends Activity {
 

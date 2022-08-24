@@ -1,3 +1,62 @@
 <resources>
     <string name="app_name">OpenSDK</string>
+
+    <string-array name="rtc_push_definitions">
+        <item>240x160</item>
+        <item>320x240</item>
+        <item>480x360 </item>
+        <item>640x480</item>
+    </string-array>
+
+    <string-array name="rtc_mcu_bg_mode">
+        <item>混流背景</item>
+        <item>等比缩放</item>
+        <item>裁剪缩放</item>
+        <item>拉伸铺满</item>
+    </string-array>
+
+    <string-array name="rtc_layout_mode">
+        <item>混流布局</item>
+        <item>一人铺满</item>
+        <item>左右两格</item>
+        <item>正品字</item>
+        <item>倒品字</item>
+        <item>2行x2列</item>
+        <item>上2下3</item>
+        <item>2行x3列</item>
+        <item>3行x3列</item>
+        <item>主次悬浮次右下</item>
+        <item>主次悬浮次左下</item>
+        <item>主次悬浮2小右上角</item>
+        <item>主次悬浮5小下面</item>
+        <item>主次悬浮5小上面</item>
+        <item>主次平铺一行4个底部</item>
+        <item>主次平铺一行4个顶部</item>
+        <item>主次平铺一列4个右边</item>
+        <item>主次平铺一列4个左边</item>
+        <item>主次平铺一行5个底部</item>
+        <item>主次平铺一行5个顶部</item>
+        <item>主次平铺右侧2x4</item>
+        <item>主次平铺左侧2x4</item>
+        <item>主次平铺右侧3x4</item>
+        <item>主次平铺1v16</item>
+        <item>主次平铺主屏下，次2x4上</item>
+        <item>主次平铺主屏左上，余12均铺</item>
+        <item>主次平铺主屏左上，余16均铺</item>
+        <item>自定义，用坐标布局接口时请用</item>
+        <item>3x4等分布局</item>
+        <item>4x4等分布局</item>
+        <item>主次悬浮,次右上角，支持竖版布局</item>
+        <item>主次悬浮,次左上角，支持竖版布局</item>
+    </string-array>
+
+    <string-array name="rtc_layout_mode_adaptive">
+        <item>混流自适应布局</item>
+        <item>默认</item>
+        <item>均分</item>
+        <item>平铺</item>
+        <item>悬浮</item>
+        <item>文档布局模式</item>
+        <item>MAX</item>
+    </string-array>
 </resources>

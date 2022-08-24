@@ -47,6 +47,6 @@ dependencies {
 
     implementation project(':ui')
 
-    withbeautifyImplementation 'com.github.vhall.android.base:vhall-beautify-faceunity:1.1.3'
+    withbeautifyImplementation 'com.github.vhall.android.base:vhall-beautify-faceunity:1.1.7'
     implementation 'com.github.vhall.android.library:vhall-beautify-kit-support:1.0.2'
 }

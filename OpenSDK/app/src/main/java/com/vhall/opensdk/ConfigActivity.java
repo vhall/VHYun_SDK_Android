@@ -8,8 +8,6 @@ import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -19,6 +17,9 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.vhall.push.VHLivePushFormat;
 
@@ -41,12 +42,14 @@ public class ConfigActivity extends Activity {
     public static final String KEY_DOC_HEIGHT_PRO="height_pro";
     public static final String KEY_DOC_WIDTH_LAN="width_lan";
     public static final String KEY_DOC_HEIGHT_LAN="height_lan";
+    public static final String KEY_RTC_MCU_BG="rtc_mcu_bg";
+    public static final String KEY_RTC_MCU_PLACEHOLDER="rtc_mcu_placeholder";
     private ArrayAdapter<String> mAdapter;
 
-    EditText etBroid, etLss, etVod, etInav, etChat, etDoc, etToken,appId;
-    SharedPreferences sp;
-    Button mBtnSave;
-    LinearLayout llCamera;
+    private EditText etBroid, etMCUBg, etMCUPlaceholder, etLss, etVod, etInav, etChat, etDoc, etToken, appId;
+    private SharedPreferences sp;
+    private Button mBtnSave;
+    private LinearLayout llCamera;
     private Spinner mSpinner;
 
     @Override
@@ -54,6 +57,8 @@ public class ConfigActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.config_layout);
         etBroid = this.findViewById(R.id.et_broid);
+        etMCUBg = this.findViewById(R.id.et_mcubg);
+        etMCUPlaceholder = this.findViewById(R.id.et_mcuplaceholder);
         mBtnSave = this.findViewById(R.id.btn_save);
         llCamera = this.findViewById(R.id.ll_camera);
         etLss = findViewById(R.id.edt_lss_room_id);
@@ -83,7 +88,8 @@ public class ConfigActivity extends Activity {
         });
         mSpinner.setSelection(mAdapter.getPosition(findKeyByValue(sp.getInt(KEY_PIX_TYPE, VHLivePushFormat.PUSH_MODE_HD))));
 
-        etBroid.setText(sp.getString(KEY_BROADCAST_ID, ""));
+        etMCUBg.setText(sp.getString(KEY_RTC_MCU_BG, ""));
+        etMCUPlaceholder.setText(sp.getString(KEY_RTC_MCU_PLACEHOLDER, ""));
         etToken.setText(sp.getString(KEY_TOKEN, ""));
         etDoc.setText(sp.getString(KEY_DOC_ID, ""));
         etChat.setText(sp.getString(KEY_CHAT_ID, ""));
@@ -96,10 +102,12 @@ public class ConfigActivity extends Activity {
             @Override
             public void onClick(View v) {
                 SharedPreferences.Editor editor = sp.edit();
-                editor.putString(KEY_BROADCAST_ID, etBroid.getText().toString());
+                editor.putString(KEY_RTC_MCU_BG, etMCUBg.getText().toString());
+                editor.putString(KEY_RTC_MCU_PLACEHOLDER, etMCUPlaceholder.getText().toString());
                 editor.putInt(KEY_PIX_TYPE, mDefinationMapping.get(mSpinner.getSelectedItem().toString()));
                 editor.putString(KEY_TOKEN, etToken.getText().toString().trim());
                 editor.putString(KEY_LSS_ID, etLss.getText().toString().trim());
+                editor.putString(KEY_BROADCAST_ID, etLss.getText().toString());
                 editor.putString(KEY_VOD_ID, etVod.getText().toString().trim());
                 editor.putString(KEY_INAV_ID, etInav.getText().toString().trim());
                 editor.putString(KEY_CHAT_ID, etChat.getText().toString().trim());

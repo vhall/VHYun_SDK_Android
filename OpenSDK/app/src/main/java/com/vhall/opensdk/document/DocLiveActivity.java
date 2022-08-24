@@ -122,11 +122,7 @@ public class DocLiveActivity extends DocActivity {
                 case START:
                     mLoadingView.setVisibility(View.GONE);
                     btnPlay.setSelected(true);
-                    /**
-                     * 重要
-                     * 为了保证生成的回放文档播放正常，每次开始推流必需调用下面接口
-                     */
-                    mDocument.sendSpecial();
+                    sendSpecial();
                     break;
                 case BUFFER:
                     mLoadingView.setVisibility(View.VISIBLE);

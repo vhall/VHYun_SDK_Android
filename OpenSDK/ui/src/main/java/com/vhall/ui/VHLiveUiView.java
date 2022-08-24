@@ -1,13 +1,10 @@
 package com.vhall.ui;
 
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.media.AudioManager;
 import android.os.CountDownTimer;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
@@ -19,6 +16,9 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.vhall.lss.play.VHLivePlayer;
 import com.vhall.player.Constants;

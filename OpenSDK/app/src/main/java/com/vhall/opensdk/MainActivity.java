@@ -12,6 +12,7 @@ import static com.vhall.opensdk.ConfigActivity.KEY_VOD_ID;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,7 +23,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.vhall.beautify.IVHBeautifyInitListener;
 import com.vhall.beautify.VHBeautifyKit;
@@ -127,6 +128,17 @@ public class MainActivity extends Activity {
         roomid = sp.getString(KEY_LSS_ID, "");
         if (getPushPermission(REQUEST_PUSH)) {
             Intent intent = new Intent(this, PushWithBeautifyActivity.class);
+            intent.putExtra("orientation", ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            startAct(intent);
+        }
+    }
+
+    public void pushWithBeautifyLand(View view) {
+        chatId = SpUtils.share().getChatId();
+        roomid = sp.getString(KEY_LSS_ID, "");
+        if (getPushPermission(REQUEST_PUSH)) {
+            Intent intent = new Intent(this, PushWithBeautifyActivity.class);
+            intent.putExtra("orientation", ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             startAct(intent);
         }
     }
@@ -210,15 +222,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void showdocOnly(View view) {
-        roomid = sp.getString(KEY_LSS_ID, "");
-        chatId = SpUtils.share().getChatId();
-        if (getPushPermission(REQUEST_PUSH_WITH_DOC)) {
-            Intent intent = new Intent(this, DocActivity.class);
-            startAct(intent);
-        }
-    }
-
     public void showDocOnly(View view) {
         chatId = SpUtils.share().getChatId();
         roomid = sp.getString(KEY_LSS_ID, "");
@@ -263,11 +266,21 @@ public class MainActivity extends Activity {
         }
     }
 
-    //无延时直播 只订阅无推流
+    //观看 无延时直播 只订阅无推流
     public void showNodelayLive(View view) {
         roomid = sp.getString(KEY_INAV_ID, "");
         Intent intent = new Intent(this, InteractiveActivity.class);
         intent.putExtra("type", InteractiveActivity.NODELAY_LIVE);
+        intent.putExtra("action", InteractiveActivity.NODELAY_ACTION_WATCH);
+        startAct(intent);
+    }
+
+    //发起 无延时直播
+    public void pushNodelayLive(View view) {
+        roomid = sp.getString(KEY_INAV_ID, "");
+        Intent intent = new Intent(this, InteractiveActivity.class);
+        intent.putExtra("type", InteractiveActivity.NODELAY_LIVE);
+        intent.putExtra("action", InteractiveActivity.NODELAY_ACTION_PUSH);
         startAct(intent);
     }
 

@@ -14,11 +14,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -59,6 +54,12 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 import static android.content.Context.MEDIA_PROJECTION_SERVICE;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 //录屏互动
 public class ScreenRecordInteractiveFragment extends Fragment implements View.OnClickListener{
@@ -291,6 +292,21 @@ public class ScreenRecordInteractiveFragment extends Fragment implements View.On
         public void onDidPublishStream(Room room, Stream stream) {//上麦
             Log.i(TAG, "onDidPublishStream");
             isOnline = true;
+        }
+
+        @Override
+        public void onDidInternalStreamAdded(Room room, JSONObject jsonObject) {
+            // demo 见 InteractiveFragment
+        }
+
+        @Override
+        public void onDidInternalStreamRemoved(Room room, JSONObject jsonObject) {
+            // demo 见 InteractiveFragment
+        }
+
+        @Override
+        public void onDidInternalStreamFailed(Room room, JSONObject jsonObject) {
+            // demo 见 InteractiveFragment
         }
 
         @Override
@@ -617,8 +633,9 @@ public class ScreenRecordInteractiveFragment extends Fragment implements View.On
         mMemberBtn = getView().findViewById(R.id.btn_members);
         mInfoBtn = getView().findViewById(R.id.iv_info);
         mOnlineTV = getView().findViewById(R.id.tv_online);
-        btnScreen = getView().findViewById(R.id.btn_screen_record);
         mOnlineTV.setTextColor(Color.RED);
+        btnScreen = getView().findViewById(R.id.btn_screen_record);
+        btnScreen.setVisibility(View.VISIBLE);
         btnScreen.setOnClickListener(this);
 //        tvScaleType = getView().findViewById(R.id.tv_scale_type);
         mJoinBtn.setOnClickListener(this);

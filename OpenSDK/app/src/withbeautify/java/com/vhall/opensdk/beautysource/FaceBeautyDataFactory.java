@@ -1,6 +1,6 @@
 package com.vhall.opensdk.beautysource;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.faceunity.core.controller.facebeauty.FaceBeautyParam;
 import com.faceunity.core.faceunity.FURenderKit;

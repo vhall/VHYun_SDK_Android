@@ -24,7 +24,7 @@
             android:text="设置" />
     </RelativeLayout>
 
-    <android.support.v4.widget.NestedScrollView
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp">
@@ -59,6 +59,13 @@
                     android:layout_height="wrap_content"
                     android:onClick="pushWithBeautify"
                     android:text="发直播+美颜" />
+
+                <Button
+                    android:id="@+id/btn_push_beautify_land"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="pushWithBeautifyLand"
+                    android:text="发直播+美颜+横屏" />
 
                 <Button
                     android:id="@+id/btn_doc"
@@ -159,11 +166,18 @@
                 android:paddingLeft="50dp">
 
                 <Button
-                    android:id="@+id/nodelay_live"
+                    android:id="@+id/nodelay_push"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="pushNodelayLive"
+                    android:text="发起无延迟直播" />
+
+                <Button
+                    android:id="@+id/nodelay_watch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:onClick="showNodelayLive"
-                    android:text="无延迟直播" />
+                    android:text="观看无延迟直播" />
 
                 <Button
                     android:id="@+id/btn_screen_record"
@@ -177,6 +191,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:onClick="showUiVod"
+                    android:visibility="gone"
                     android:text="皮肤录播" />
 
                 <Button
@@ -184,6 +199,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:onClick="showUiLss"
+                    android:visibility="gone"
                     android:text="皮肤直播" />
 
                 <Button
@@ -207,5 +223,5 @@
                     android:text="看快直播" />
             </LinearLayout>
         </LinearLayout>
-    </android.support.v4.widget.NestedScrollView>
+    </androidx.core.widget.NestedScrollView>
 </LinearLayout>

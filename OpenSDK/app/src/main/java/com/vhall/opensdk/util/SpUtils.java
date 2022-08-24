@@ -94,8 +94,12 @@ public class SpUtils {
     }
 
     //获取聊天channel id
-    public String getChatId(){
-        return sp.getString(ConfigActivity.KEY_CHAT_ID,"");
+    public String getChatId() {
+        return sp.getString(ConfigActivity.KEY_CHAT_ID, "");
+    }
+
+    public String getToken() {
+        return sp.getString(ConfigActivity.KEY_TOKEN, "");
     }
 
     // ,号隔开

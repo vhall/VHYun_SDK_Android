@@ -24,7 +24,21 @@
                 android:id="@+id/et_broid"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:hint="旁路ID（互动直播推旁路配置项 直播id lss）" />
+                android:background="@null"
+                android:enabled="false"
+                android:hint="旁路ID（同直播id，见下方lssRoomId）" />
+
+            <EditText
+                android:id="@+id/et_mcubg"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:hint="旁路混流背景图(https)" />
+
+            <EditText
+                android:id="@+id/et_mcuplaceholder"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:hint="旁路混流网格占位图(https)" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -82,7 +96,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:padding="5dp"
-                    android:text="" />
+                    android:text="vhall" />
             </LinearLayout>
 
             <LinearLayout
@@ -103,7 +117,10 @@
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:hint="lssRoomId"
-                    android:padding="5dp"/>
+                    android:padding="5dp"
+                    android:text="lss_772f6eda" />
+
+
             </LinearLayout>
 
             <LinearLayout
@@ -123,7 +140,8 @@
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:hint="vodRoomId"
-                    android:padding="5dp" />
+                    android:padding="5dp"
+                    android:text="ac23cf44" />
             </LinearLayout>
 
             <LinearLayout
@@ -144,7 +162,10 @@
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:hint="chRoomId"
-                    android:padding="5dp" />
+                    android:padding="5dp"
+                    android:text="ch_17c990c7" />
+
+
             </LinearLayout>
 
             <LinearLayout
@@ -164,7 +185,8 @@
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:hint="inavRoomId"
-                    android:padding="5dp" />
+                    android:padding="5dp"
+                    android:text="inav_e301abbf" />
             </LinearLayout>
 
             <LinearLayout
@@ -185,7 +207,8 @@
                     android:layout_weight="1"
                     android:gravity="center_vertical"
                     android:hint="chRoomId"
-                    android:padding="5dp" />
+                    android:padding="5dp"
+                    android:text="43c03b43" />
             </LinearLayout>
 
             <Button

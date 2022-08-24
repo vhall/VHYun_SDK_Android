@@ -1,8 +1,8 @@
 package com.vhall.opensdk.push;
 
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -14,6 +14,8 @@ import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.fragment.app.FragmentActivity;
 
 import com.vhall.beautify.VHBeautifyKit;
 import com.vhall.beautifykit.control.FaceBeautyControlView;
@@ -73,6 +75,9 @@ public class PushWithBeautifyActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setRequestedOrientation(getIntent().getIntExtra("orientation", ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
+
         roomId = getIntent().getStringExtra("roomId");
         mChannelId = getIntent().getStringExtra("channelId");
         if (TextUtils.isEmpty(roomId)) {
