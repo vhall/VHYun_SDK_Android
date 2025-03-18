@@ -325,20 +325,20 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
         }
 
         @Override
-        public void onDidInternalStreamAdded(Room room, JSONObject jsonObject) {
-            Log.i(TAG, "onDidInternalStreamAdded " + jsonObject.toString());
-            showToast("onDidInternalStreamAdded " + jsonObject.toString());
-            mDocStreamId = jsonObject.optString("id");
+        public void onDidInternalStreamAdded(Room room, Stream stream) {
+//            Log.i(TAG, "onDidInternalStreamAdded " + jsonObject.toString());
+//            showToast("onDidInternalStreamAdded " + jsonObject.toString());
+            mDocStreamId = stream.streamId;// jsonObject.optString("id");
         }
 
         @Override
-        public void onDidInternalStreamRemoved(Room room, JSONObject jsonObject) {
-            Log.i(TAG, "onDidInternalStreamRemoved : " + jsonObject.toString());
-            showToast("onDidInternalStreamRemoved : " + jsonObject.toString());
+        public void onDidInternalStreamRemoved(Room room, Stream stream) {
+//            Log.i(TAG, "onDidInternalStreamRemoved : " + jsonObject.toString());
+//            showToast("onDidInternalStreamRemoved : " + jsonObject.toString());
         }
 
         @Override
-        public void onDidInternalStreamFailed(Room room, JSONObject jsonObject) {
+        public void onDidInternalStreamFailed(Room room, Stream stream, JSONObject jsonObject) {
             Log.i(TAG, "onDidInternalStreamRemoved : " + jsonObject.toString());
             showToast("onDidInternalStreamRemoved : " + jsonObject.toString());
         }
@@ -1010,9 +1010,9 @@ public class InteractiveFragment extends Fragment implements View.OnClickListene
 
     private void changeMixAdaptiveLayoutMode(int pos) {
         if (null != interactive) {
-            interactive.setMixAdaptiveLayoutMode(pos, (code, msg) -> {
-                showToast(VRTCCode.MCU_BG_RESULT == code ? "成功" : code + " : " + msg);
-            });
+//            interactive.setMixAdaptiveLayoutMode(pos, (code, msg) -> {
+//                showToast(VRTCCode.MCU_BG_RESULT == code ? "成功" : code + " : " + msg);
+//            });
         }
     }
 

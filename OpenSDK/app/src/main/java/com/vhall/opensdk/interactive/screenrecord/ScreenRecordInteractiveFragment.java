@@ -295,17 +295,17 @@ public class ScreenRecordInteractiveFragment extends Fragment implements View.On
         }
 
         @Override
-        public void onDidInternalStreamAdded(Room room, JSONObject jsonObject) {
+        public void onDidInternalStreamAdded(Room room, Stream stream) {
             // demo 见 InteractiveFragment
         }
 
         @Override
-        public void onDidInternalStreamRemoved(Room room, JSONObject jsonObject) {
+        public void onDidInternalStreamRemoved(Room room, Stream stream) {
             // demo 见 InteractiveFragment
         }
 
         @Override
-        public void onDidInternalStreamFailed(Room room, JSONObject jsonObject) {
+        public void onDidInternalStreamFailed(Room room, Stream stream, JSONObject jsonObject) {
             // demo 见 InteractiveFragment
         }
 
